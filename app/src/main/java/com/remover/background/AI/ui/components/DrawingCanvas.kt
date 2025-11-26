@@ -84,16 +84,16 @@ fun DrawingCanvas(
                                         if (p1.previousPressed && p2.previousPressed) {
                                             val oldDist = (p1.previousPosition - p2.previousPosition).getDistance()
                                             val newDist = (p1.position - p2.position).getDistance()
-                                            if (oldDist > 0f) {
+                                            // Minimum threshold to prevent unstable zoom from tiny finger movements
+                                            if (oldDist > 10f) {
                                                 val zoomChange = newDist / oldDist
                                                 scale = (scale * zoomChange).coerceIn(1f, 10f)
                                             }
 
                                             // Calculate pan (average movement of both fingers)
-                                            val pan = Offset(
-                                                (p1.position.x - p1.previousPosition.x + p2.position.x - p2.previousPosition.x) / 2f,
-                                                (p1.position.y - p1.previousPosition.y + p2.position.y - p2.previousPosition.y) / 2f
-                                            )
+                                            val p1Movement = p1.position - p1.previousPosition
+                                            val p2Movement = p2.position - p2.previousPosition
+                                            val pan = (p1Movement + p2Movement) / 2f
                                             if (scale > 1f) {
                                                 offsetX += pan.x
                                                 offsetY += pan.y
