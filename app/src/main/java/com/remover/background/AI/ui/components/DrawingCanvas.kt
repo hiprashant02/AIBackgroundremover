@@ -60,38 +60,62 @@ fun DrawingCanvas(
                     translationX = offsetX,
                     translationY = offsetY
                 )
-                // Pan and Zoom Gesture
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        scale = (scale * zoom).coerceIn(1f, 10f)
-                        if (scale > 1f) {
-                            // Allow panning only when zoomed in
-                            val maxOffsetX = (canvasSize.width * (scale - 1)) / 2
-                            val maxOffsetY = (canvasSize.height * (scale - 1)) / 2
-
-                            // Simple bounds check (optional, can be removed for free panning)
-                            offsetX += pan.x
-                            offsetY += pan.y
-                        } else {
-                            // Reset position if zoomed out
-                            scale = 1f
-                            offsetX = 0f
-                            offsetY = 0f
-                        }
-                    }
-                }
-                // Drawing Gesture
-                .pointerInput(isEnabled, brushTool, imageBounds, scale, offsetX, offsetY) {
-                    if (!isEnabled) return@pointerInput
+                // Unified gesture handling: Drawing with 1 finger, Zoom/Pan with 2 fingers
+                .pointerInput(isEnabled, brushTool, imageBounds) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
-                            when (event.changes.size) {
-                                1 -> {
+
+                            when {
+                                // Two-finger gesture: Zoom and Pan
+                                event.changes.size >= 2 -> {
+                                    // Cancel any ongoing drawing
+                                    if (isDrawing) {
+                                        isDrawing = false
+                                        currentPath = emptyList()
+                                    }
+
+                                    val pressed = event.changes.filter { it.pressed }
+                                    if (pressed.size >= 2) {
+                                        val p1 = pressed[0]
+                                        val p2 = pressed[1]
+
+                                        // Calculate zoom
+                                        if (p1.previousPressed && p2.previousPressed) {
+                                            val oldDist = (p1.previousPosition - p2.previousPosition).getDistance()
+                                            val newDist = (p1.position - p2.position).getDistance()
+                                            if (oldDist > 0f) {
+                                                val zoomChange = newDist / oldDist
+                                                scale = (scale * zoomChange).coerceIn(1f, 10f)
+                                            }
+
+                                            // Calculate pan (average movement of both fingers)
+                                            val pan = Offset(
+                                                (p1.position.x - p1.previousPosition.x + p2.position.x - p2.previousPosition.x) / 2f,
+                                                (p1.position.y - p1.previousPosition.y + p2.position.y - p2.previousPosition.y) / 2f
+                                            )
+                                            if (scale > 1f) {
+                                                offsetX += pan.x
+                                                offsetY += pan.y
+                                            }
+                                        }
+
+                                        // Reset if zoomed out completely
+                                        if (scale <= 1f) {
+                                            scale = 1f
+                                            offsetX = 0f
+                                            offsetY = 0f
+                                        }
+
+                                        pressed.forEach { it.consume() }
+                                    }
+                                }
+
+                                // Single-finger gesture: Drawing
+                                event.changes.size == 1 && isEnabled -> {
                                     val change = event.changes.first()
 
-                                    // CRITICAL FIX: Correctly map screen touch to image coordinates
-                                    // taking into account the Zoom (Scale) and Pan (Offset)
+                                    // Map screen touch to image coordinates accounting for zoom/pan
                                     val imagePos = screenToImageCoordinates(
                                         change.position,
                                         imageBounds,
@@ -102,13 +126,16 @@ fun DrawingCanvas(
 
                                     if (imagePos != null) {
                                         if (change.pressed && !change.previousPressed) {
+                                            // Start drawing
                                             isDrawing = true
                                             currentPath = listOf(imagePos)
                                             change.consume()
                                         } else if (change.pressed && change.positionChanged() && isDrawing) {
+                                            // Continue drawing
                                             currentPath = currentPath + imagePos
                                             change.consume()
                                         } else if (!change.pressed && isDrawing) {
+                                            // End drawing
                                             if (currentPath.isNotEmpty()) {
                                                 onDrawingPath(DrawingPath(currentPath, brushTool))
                                             }
@@ -117,6 +144,8 @@ fun DrawingCanvas(
                                         }
                                     }
                                 }
+
+                                // No pointers or disabled
                                 else -> {
                                     if (isDrawing) {
                                         isDrawing = false
