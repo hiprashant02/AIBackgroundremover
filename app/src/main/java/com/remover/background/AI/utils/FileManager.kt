@@ -22,9 +22,16 @@ class FileManager(private val context: Context) {
         quality: Int = 100
     ): Result<Uri> = withContext(Dispatchers.IO) {
         try {
+            // Automatically detect if PNG should be used for transparency
+            val shouldUsePNG = bitmap.hasAlpha() || format == Bitmap.CompressFormat.PNG
+            val finalFormat = if (shouldUsePNG) Bitmap.CompressFormat.PNG else format
+
+            // Ensure quality is 100 for best results
+            val finalQuality = 100
+
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                put(MediaStore.Images.Media.MIME_TYPE, when (format) {
+                put(MediaStore.Images.Media.MIME_TYPE, when (finalFormat) {
                     Bitmap.CompressFormat.PNG -> "image/png"
                     Bitmap.CompressFormat.JPEG -> "image/jpeg"
                     Bitmap.CompressFormat.WEBP -> "image/webp"
@@ -43,7 +50,9 @@ class FileManager(private val context: Context) {
             ) ?: return@withContext Result.failure(Exception("Failed to create media store entry"))
 
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                bitmap.compress(format, quality, outputStream)
+                // Use maximum quality and flush the stream
+                bitmap.compress(finalFormat, finalQuality, outputStream)
+                outputStream.flush()
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -67,7 +76,9 @@ class FileManager(private val context: Context) {
 
             val file = File(cacheDir, fileName)
             FileOutputStream(file).use { outputStream ->
+                // Always use PNG with maximum quality for cache (lossless)
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                outputStream.flush()
             }
 
             Result.success(Uri.fromFile(file))

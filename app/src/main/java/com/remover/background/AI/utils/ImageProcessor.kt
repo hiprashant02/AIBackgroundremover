@@ -1,5 +1,6 @@
 package com.remover.background.AI.utils
 
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -10,11 +11,15 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RenderEffect
 import android.graphics.Shader
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import com.remover.background.AI.model.BackgroundType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class ImageProcessor {
 
@@ -41,6 +46,72 @@ class ImageProcessor {
         Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     }
 
+    /**
+     * Compose final image using ML Kit's direct foreground bitmap (RECOMMENDED)
+     * This produces the best quality results with enhanced rendering
+     */
+    suspend fun composeFinalImage(
+        foregroundBitmap: Bitmap,
+        background: BackgroundType,
+        originalWidth: Int,
+        originalHeight: Int,
+        originalBitmap: Bitmap? = null
+    ): Bitmap = withContext(Dispatchers.Default) {
+        // Create the canvas for the final result with ARGB_8888 for best quality
+        val outputBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(outputBitmap)
+
+        // High-quality paint settings
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+            isDither = true
+            isAntiAlias = true
+        }
+
+        // 1. Draw the selected background
+        when (background) {
+            is BackgroundType.Transparent -> {
+                // Transparent background - do nothing
+            }
+            is BackgroundType.SolidColor -> {
+                canvas.drawColor(background.color.toArgb())
+            }
+            is BackgroundType.Gradient -> {
+                drawGradientBackground(canvas, originalWidth, originalHeight, background)
+            }
+            is BackgroundType.Blur -> {
+                if (originalBitmap != null) {
+                    drawBlurredBackground(canvas, originalBitmap, background.intensity)
+                }
+            }
+            is BackgroundType.Original -> {
+                if (originalBitmap != null) {
+                    canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
+                }
+            }
+        }
+
+        // 2. Draw the cut-out subject on top with high-quality scaling
+        val scaledForeground = if (foregroundBitmap.width != originalWidth || foregroundBitmap.height != originalHeight) {
+            // Use high-quality scaling
+            Bitmap.createScaledBitmap(foregroundBitmap, originalWidth, originalHeight, true)
+        } else {
+            foregroundBitmap
+        }
+
+        canvas.drawBitmap(scaledForeground, 0f, 0f, paint)
+
+        if (scaledForeground != foregroundBitmap) {
+            scaledForeground.recycle()
+        }
+
+        return@withContext outputBitmap
+    }
+
+    /**
+     * Apply mask-based approach (alternative method)
+     */
     suspend fun applyMaskToBitmap(
         originalBitmap: Bitmap,
         maskBitmap: Bitmap,
@@ -215,6 +286,133 @@ class ImageProcessor {
             (this.green * 255).toInt(),
             (this.blue * 255).toInt()
         )
+    }
+
+    /**
+     * Save bitmap to file with best quality settings
+     * Uses PNG for transparency and JPEG for opaque images
+     */
+    suspend fun saveBitmapToFile(
+        bitmap: Bitmap,
+        outputFile: File,
+        hasTransparency: Boolean = false
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            outputFile.parentFile?.mkdirs()
+
+            outputFile.outputStream().use { out ->
+                if (hasTransparency) {
+                    // Use PNG for images with transparency (lossless)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                } else {
+                    // Use JPEG with maximum quality for opaque images
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Save bitmap to MediaStore with high quality
+     * Automatically selects format based on background type
+     */
+    suspend fun saveBitmapHighQuality(
+        bitmap: Bitmap,
+        context: Context,
+        fileName: String,
+        backgroundType: BackgroundType
+    ): Uri? = withContext(Dispatchers.IO) {
+        try {
+            val hasTransparency = backgroundType is BackgroundType.Transparent
+
+            val format = if (hasTransparency) {
+                Bitmap.CompressFormat.PNG
+            } else {
+                Bitmap.CompressFormat.JPEG
+            }
+
+            val extension = if (hasTransparency) "png" else "jpg"
+            val mimeType = if (hasTransparency) "image/png" else "image/jpeg"
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "$fileName.$extension")
+                put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/AIBackgroundRemover")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                resolver.openOutputStream(it)?.use { out ->
+                    // Compress with maximum quality (100 for both PNG and JPEG)
+                    bitmap.compress(format, 100, out)
+                    out.flush()
+                }
+
+                // Mark as not pending anymore
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(it, contentValues, null, null)
+
+                it
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * Save bitmap with automatic format detection and best quality
+     */
+    suspend fun saveImageWithBestQuality(
+        bitmap: Bitmap,
+        context: Context,
+        fileName: String = "bg_removed_${System.currentTimeMillis()}",
+        hasAlpha: Boolean = bitmap.hasAlpha()
+    ): Uri? = withContext(Dispatchers.IO) {
+        try {
+            val format = if (hasAlpha) {
+                Bitmap.CompressFormat.PNG
+            } else {
+                Bitmap.CompressFormat.JPEG
+            }
+
+            val extension = if (hasAlpha) "png" else "jpg"
+            val mimeType = if (hasAlpha) "image/png" else "image/jpeg"
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "$fileName.$extension")
+                put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/AIBackgroundRemover")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                resolver.openOutputStream(it)?.use { out ->
+                    bitmap.compress(format, 100, out)
+                    out.flush()
+                }
+
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(it, contentValues, null, null)
+
+                it
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }
 
