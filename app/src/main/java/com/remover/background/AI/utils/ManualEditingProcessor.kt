@@ -14,248 +14,147 @@ import com.remover.background.AI.model.DrawingPath
 import com.remover.background.AI.model.DrawingPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.math.sqrt
+import kotlin.math.hypot
+import kotlin.math.max
 
-/**
- * Processor for manual brush editing of masks
- */
 class ManualEditingProcessor {
 
-    /**
-     * Apply brush strokes to the mask bitmap
-     */
     suspend fun applyBrushStrokes(
         originalMask: Bitmap,
         paths: List<DrawingPath>,
         imageWidth: Int,
         imageHeight: Int
     ): Bitmap = withContext(Dispatchers.Default) {
-        // Create a mutable copy of the mask
         val editedMask = originalMask.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(editedMask)
-
-        paths.forEach { path ->
-            applyPath(canvas, path, imageWidth, imageHeight)
-        }
-
+        paths.forEach { path -> applyPath(canvas, path, imageWidth, imageHeight) }
         return@withContext editedMask
     }
 
-    /**
-     * Apply a single drawing path to the canvas
-     */
-    private fun applyPath(
-        canvas: Canvas,
-        path: DrawingPath,
-        imageWidth: Int,
-        imageHeight: Int
-    ) {
+    private fun applyPath(canvas: Canvas, path: DrawingPath, w: Int, h: Int) {
         val points = path.points
         if (points.isEmpty()) return
 
         val brush = path.brushTool
-
-        // Create paint for brush
         val paint = Paint().apply {
             isAntiAlias = true
             isDither = true
             style = Paint.Style.FILL
+            alpha = (brush.opacity * 255).toInt()
 
-            // Set blend mode based on brush mode
+            // FIX: Restore must use null (SRC_OVER) to draw opaque white over transparent areas
             xfermode = when (brush.mode) {
                 BrushMode.ERASE -> PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
-                BrushMode.RESTORE -> PorterDuffXfermode(PorterDuff.Mode.DST_OVER)
+                BrushMode.RESTORE -> null
             }
-
-            alpha = (brush.opacity * 255).toInt()
         }
 
-        // Draw each segment of the path
-        for (i in 0 until points.size) {
-            val point = points[i]
-
-            // Scale point coordinates to bitmap dimensions
-            val scaledX = point.x * imageWidth
-            val scaledY = point.y * imageHeight
-
-            // Adjust brush size by pressure
-            val effectiveSize = brush.size * point.pressure
-
-            // Create gradient brush for soft edges
-            val shader = if (brush.hardness < 1.0f) {
-                RadialGradient(
-                    scaledX, scaledY,
-                    effectiveSize / 2,
-                    intArrayOf(
-                        Color.WHITE,
-                        Color.TRANSPARENT
-                    ),
-                    floatArrayOf(
-                        brush.hardness,
-                        1.0f
-                    ),
-                    Shader.TileMode.CLAMP
-                )
-            } else {
-                null
-            }
-
-            paint.shader = shader
-
-            // Draw the brush stroke
-            when (brush.mode) {
-                BrushMode.ERASE -> {
-                    // Erase (make transparent)
-                    canvas.drawCircle(scaledX, scaledY, effectiveSize / 2, paint)
-                }
-                BrushMode.RESTORE -> {
-                    // Restore (make opaque)
-                    paint.color = Color.WHITE
-                    canvas.drawCircle(scaledX, scaledY, effectiveSize / 2, paint)
-                }
-            }
-
-            // Draw line between consecutive points for smooth stroke
-            if (i > 0) {
-                val prevPoint = points[i - 1]
-                val prevX = prevPoint.x * imageWidth
-                val prevY = prevPoint.y * imageHeight
-
-                paint.strokeWidth = effectiveSize
-                paint.style = Paint.Style.STROKE
-                paint.strokeCap = Paint.Cap.ROUND
-
-                canvas.drawLine(prevX, prevY, scaledX, scaledY, paint)
-
-                paint.style = Paint.Style.FILL
-            }
+        // Stepping Algorithm: Interpolate between points for smooth strokes
+        drawPoint(canvas, points[0], brush, paint, w, h)
+        for (i in 1 until points.size) {
+            val p1 = points[i - 1]
+            val p2 = points[i]
+            drawSegment(canvas, p1, p2, brush, paint, w, h)
         }
     }
 
-    /**
-     * Create initial mask from foreground bitmap
-     */
-    suspend fun createMaskFromForeground(
-        foregroundBitmap: Bitmap
-    ): Bitmap = withContext(Dispatchers.Default) {
-        val width = foregroundBitmap.width
-        val height = foregroundBitmap.height
+    private fun drawPoint(canvas: Canvas, p: DrawingPoint, brush: BrushTool, paint: Paint, w: Int, h: Int) {
+        drawBrushCircle(canvas, p.x * w, p.y * h, brush.size * p.pressure, brush.hardness, paint)
+    }
 
+    private fun drawSegment(canvas: Canvas, p1: DrawingPoint, p2: DrawingPoint, brush: BrushTool, paint: Paint, w: Int, h: Int) {
+        val startX = p1.x * w; val startY = p1.y * h
+        val endX = p2.x * w; val endY = p2.y * h
+        val distance = hypot(endX - startX, endY - startY)
+        val brushSize = brush.size * p2.pressure
+
+        // Step size: 10% of brush size ensures smoothness without killing performance
+        val spacing = max(1f, brushSize * 0.1f)
+        val steps = (distance / spacing).toInt()
+
+        for (i in 1..steps) {
+            val t = i.toFloat() / steps
+            drawBrushCircle(
+                canvas,
+                startX + (endX - startX) * t,
+                startY + (endY - startY) * t,
+                brushSize, brush.hardness, paint
+            )
+        }
+    }
+
+    private fun drawBrushCircle(canvas: Canvas, x: Float, y: Float, size: Float, hardness: Float, paint: Paint) {
+        // Gradient shader must be recreated at each position for correct "Softness"
+        if (hardness < 1.0f) {
+            paint.shader = RadialGradient(
+                x, y, size / 2,
+                intArrayOf(Color.WHITE, Color.TRANSPARENT),
+                floatArrayOf(hardness, 1.0f),
+                Shader.TileMode.CLAMP
+            )
+            paint.color = Color.WHITE
+        } else {
+            paint.shader = null
+            paint.color = Color.WHITE
+        }
+        canvas.drawCircle(x, y, size / 2, paint)
+    }
+
+    // --- Helpers (Unchanged from original but required for compilation) ---
+    suspend fun createMaskFromForeground(foregroundBitmap: Bitmap): Bitmap = withContext(Dispatchers.Default) {
+        val width = foregroundBitmap.width; val height = foregroundBitmap.height
         val mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
         val pixels = IntArray(width * height)
         foregroundBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-
-        // Extract alpha channel as mask
         val maskPixels = IntArray(width * height)
-        for (i in pixels.indices) {
-            val alpha = Color.alpha(pixels[i])
-            maskPixels[i] = Color.argb(alpha, 255, 255, 255)
-        }
-
+        for (i in pixels.indices) maskPixels[i] = Color.argb(Color.alpha(pixels[i]), 255, 255, 255)
         mask.setPixels(maskPixels, 0, width, 0, 0, width, height)
         return@withContext mask
     }
 
-    /**
-     * Apply edited mask to original image
-     */
-    suspend fun applyEditedMask(
-        originalBitmap: Bitmap,
-        editedMask: Bitmap
-    ): Bitmap = withContext(Dispatchers.Default) {
-        val width = originalBitmap.width
-        val height = originalBitmap.height
-
-        val scaledMask = if (editedMask.width != width || editedMask.height != height) {
-            Bitmap.createScaledBitmap(editedMask, width, height, true)
-        } else {
-            editedMask
-        }
-
+    suspend fun applyEditedMask(originalBitmap: Bitmap, editedMask: Bitmap): Bitmap = withContext(Dispatchers.Default) {
+        val width = originalBitmap.width; val height = originalBitmap.height
+        val scaledMask = if (editedMask.width != width || editedMask.height != height)
+            Bitmap.createScaledBitmap(editedMask, width, height, true) else editedMask
         val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
         val originalPixels = IntArray(width * height)
         val maskPixels = IntArray(width * height)
-
         originalBitmap.getPixels(originalPixels, 0, width, 0, 0, width, height)
         scaledMask.getPixels(maskPixels, 0, width, 0, 0, width, height)
-
         val resultPixels = IntArray(width * height)
-
         for (i in originalPixels.indices) {
-            val maskAlpha = Color.alpha(maskPixels[i])
-            val originalColor = originalPixels[i]
-
-            // Apply mask alpha to original pixel
-            resultPixels[i] = Color.argb(
-                maskAlpha,
-                Color.red(originalColor),
-                Color.green(originalColor),
-                Color.blue(originalColor)
-            )
+            resultPixels[i] = Color.argb(Color.alpha(maskPixels[i]), Color.red(originalPixels[i]), Color.green(originalPixels[i]), Color.blue(originalPixels[i]))
         }
-
         result.setPixels(resultPixels, 0, width, 0, 0, width, height)
-
-        if (scaledMask != editedMask) {
-            scaledMask.recycle()
-        }
-
+        if (scaledMask != editedMask) scaledMask.recycle()
         return@withContext result
     }
 
-    /**
-     * Smooth the mask edges for better quality
-     */
-    suspend fun smoothMask(
-        mask: Bitmap,
-        radius: Int = 2
-    ): Bitmap = withContext(Dispatchers.Default) {
-        val width = mask.width
-        val height = mask.height
-
+    suspend fun smoothMask(mask: Bitmap, radius: Int = 2): Bitmap = withContext(Dispatchers.Default) {
+        val width = mask.width; val height = mask.height
         val smoothed = mask.copy(Bitmap.Config.ARGB_8888, true)
         val pixels = IntArray(width * height)
         smoothed.getPixels(pixels, 0, width, 0, 0, width, height)
-
         val tempPixels = pixels.clone()
-
-        // Simple box blur on alpha channel
         for (y in radius until height - radius) {
             for (x in radius until width - radius) {
-                var alphaSum = 0
-                var count = 0
-
+                var alphaSum = 0; var count = 0
                 for (dy in -radius..radius) {
                     for (dx in -radius..radius) {
-                        val pixel = pixels[(y + dy) * width + (x + dx)]
-                        alphaSum += Color.alpha(pixel)
+                        alphaSum += Color.alpha(pixels[(y + dy) * width + (x + dx)])
                         count++
                     }
                 }
-
-                val avgAlpha = alphaSum / count
-                val originalPixel = pixels[y * width + x]
-                tempPixels[y * width + x] = Color.argb(
-                    avgAlpha,
-                    Color.red(originalPixel),
-                    Color.green(originalPixel),
-                    Color.blue(originalPixel)
-                )
+                val p = pixels[y * width + x]
+                tempPixels[y * width + x] = Color.argb(alphaSum / count, Color.red(p), Color.green(p), Color.blue(p))
             }
         }
-
         smoothed.setPixels(tempPixels, 0, width, 0, 0, width, height)
         return@withContext smoothed
     }
 
-    /**
-     * Calculate optimal brush size based on image dimensions
-     */
     fun calculateOptimalBrushSize(imageWidth: Int, imageHeight: Int): Float {
         val maxDimension = maxOf(imageWidth, imageHeight)
         return (maxDimension * 0.05f).coerceIn(20f, 100f)
     }
 }
-
