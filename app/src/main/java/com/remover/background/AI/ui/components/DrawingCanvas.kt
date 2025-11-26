@@ -54,13 +54,9 @@ fun DrawingCanvas(
             modifier = Modifier
                 .fillMaxSize()
                 .onSizeChanged { size -> canvasSize = size }
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offsetX,
-                    translationY = offsetY
-                )
-                // Unified gesture handling: Drawing with 1 finger, Zoom/Pan with 2 fingers
+                // FIX 1: Move pointerInput BEFORE graphicsLayer
+                // This ensures we get RAW screen coordinates, making your manual math in
+                // screenToImageCoordinates correct.
                 .pointerInput(isEnabled, brushTool, imageBounds) {
                     awaitPointerEventScope {
                         while (true) {
@@ -69,7 +65,6 @@ fun DrawingCanvas(
                             when {
                                 // Two-finger gesture: Zoom and Pan
                                 event.changes.size >= 2 -> {
-                                    // Cancel any ongoing drawing
                                     if (isDrawing) {
                                         isDrawing = false
                                         currentPath = emptyList()
@@ -80,17 +75,14 @@ fun DrawingCanvas(
                                         val p1 = pressed[0]
                                         val p2 = pressed[1]
 
-                                        // Calculate zoom
                                         if (p1.previousPressed && p2.previousPressed) {
                                             val oldDist = (p1.previousPosition - p2.previousPosition).getDistance()
                                             val newDist = (p1.position - p2.position).getDistance()
-                                            // Minimum threshold to prevent unstable zoom from tiny finger movements
                                             if (oldDist > 10f) {
                                                 val zoomChange = newDist / oldDist
                                                 scale = (scale * zoomChange).coerceIn(1f, 10f)
                                             }
 
-                                            // Calculate pan (average movement of both fingers)
                                             val p1Movement = p1.position - p1.previousPosition
                                             val p2Movement = p2.position - p2.previousPosition
                                             val pan = (p1Movement + p2Movement) / 2f
@@ -100,13 +92,11 @@ fun DrawingCanvas(
                                             }
                                         }
 
-                                        // Reset if zoomed out completely
                                         if (scale <= 1f) {
                                             scale = 1f
                                             offsetX = 0f
                                             offsetY = 0f
                                         }
-
                                         pressed.forEach { it.consume() }
                                     }
                                 }
@@ -115,7 +105,8 @@ fun DrawingCanvas(
                                 event.changes.size == 1 && isEnabled -> {
                                     val change = event.changes.first()
 
-                                    // Map screen touch to image coordinates accounting for zoom/pan
+                                    // With pointerInput before graphicsLayer, `change.position` is untransformed screen coords.
+                                    // Your screenToImageCoordinates math will now work correctly.
                                     val imagePos = screenToImageCoordinates(
                                         change.position,
                                         imageBounds,
@@ -126,16 +117,13 @@ fun DrawingCanvas(
 
                                     if (imagePos != null) {
                                         if (change.pressed && !change.previousPressed) {
-                                            // Start drawing
                                             isDrawing = true
                                             currentPath = listOf(imagePos)
                                             change.consume()
                                         } else if (change.pressed && change.positionChanged() && isDrawing) {
-                                            // Continue drawing
                                             currentPath = currentPath + imagePos
                                             change.consume()
                                         } else if (!change.pressed && isDrawing) {
-                                            // End drawing
                                             if (currentPath.isNotEmpty()) {
                                                 onDrawingPath(DrawingPath(currentPath, brushTool))
                                             }
@@ -144,8 +132,6 @@ fun DrawingCanvas(
                                         }
                                     }
                                 }
-
-                                // No pointers or disabled
                                 else -> {
                                     if (isDrawing) {
                                         isDrawing = false
@@ -156,6 +142,13 @@ fun DrawingCanvas(
                         }
                     }
                 }
+                // GraphicsLayer is now applied AFTER pointer input, only affecting visual drawing
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offsetX,
+                    translationY = offsetY
+                )
         ) {
             // Draw the Image
             drawIntoCanvas { canvas ->
@@ -168,7 +161,7 @@ fun DrawingCanvas(
                 }
             }
 
-            // Draw the Brush Preview Path (scaled inversely so it stays constant size visually)
+            // Draw the Brush Preview Path
             if (currentPath.isNotEmpty() && imageBounds != androidx.compose.ui.geometry.Rect.Zero) {
                 val path = Path()
                 val firstPoint = currentPath.first()
@@ -187,12 +180,19 @@ fun DrawingCanvas(
                 val previewColor = if (brushTool.mode == BrushMode.ERASE)
                     Color.Red.copy(alpha=0.5f) else Color.Green.copy(alpha=0.5f)
 
-                // Divide width by scale so the stroke doesn't get huge when you zoom in
+                // FIX 2: Correct Brush Preview Size scaling
+                // We calculate how many screen pixels represent 1 bitmap pixel
+                val bitmapToScreenScale = if (bitmap.width > 0) imageBounds.width / bitmap.width.toFloat() else 1f
+
+                // We apply that ratio to the brush size.
+                // We do NOT divide by 'scale' (zoom) because the graphicsLayer scales the drawing for us.
+                val visualStrokeWidth = brushTool.size * bitmapToScreenScale
+
                 drawPath(
                     path,
                     previewColor,
                     style = Stroke(
-                        width = brushTool.size / scale,
+                        width = visualStrokeWidth,
                         cap = androidx.compose.ui.graphics.StrokeCap.Round
                     )
                 )
@@ -201,6 +201,7 @@ fun DrawingCanvas(
     }
 }
 
+// Keep helper functions exactly as they were, they are correct now that modifier order is fixed.
 private fun calculateImageBounds(canvasSize: IntSize, imageAspectRatio: Float): androidx.compose.ui.geometry.Rect {
     val canvasAspectRatio = canvasSize.width.toFloat() / canvasSize.height.toFloat()
     val (width, height) = if (imageAspectRatio > canvasAspectRatio) {
@@ -215,10 +216,6 @@ private fun calculateImageBounds(canvasSize: IntSize, imageAspectRatio: Float): 
     return androidx.compose.ui.geometry.Rect(left, top, left + width, top + height)
 }
 
-/**
- * Maps a touch on the screen to a 0..1 coordinate on the image.
- * Handles the Inverse Matrix Logic for Center-Pivoted Scaling.
- */
 private fun screenToImageCoordinates(
     screenPos: Offset,
     imageBounds: androidx.compose.ui.geometry.Rect,
@@ -228,21 +225,17 @@ private fun screenToImageCoordinates(
 ): DrawingPoint? {
     if (imageBounds.isEmpty) return null
 
-    // The center of the canvas is the pivot point for scaling
     val cx = canvasSize.width / 2f
     val cy = canvasSize.height / 2f
 
-    // Formula: (ScreenPos - Translation - Pivot) / Scale + Pivot
     val transformedX = ((screenPos.x - offset.x - cx) / scale) + cx
     val transformedY = ((screenPos.y - offset.y - cy) / scale) + cy
 
-    // Check if the touch is actually on the image
     if (transformedX < imageBounds.left || transformedX > imageBounds.right ||
         transformedY < imageBounds.top || transformedY > imageBounds.bottom) {
         return null
     }
 
-    // Normalize to 0..1
     val normalizedX = (transformedX - imageBounds.left) / imageBounds.width
     val normalizedY = (transformedY - imageBounds.top) / imageBounds.height
 
