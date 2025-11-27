@@ -14,6 +14,7 @@ import com.remover.background.AI.ml.BackgroundRemovalProcessor
 import com.remover.background.AI.ml.MaskQuality
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
+import com.remover.background.AI.model.BrushPreset
 import com.remover.background.AI.model.BrushTool
 import com.remover.background.AI.model.DrawingPath
 import com.remover.background.AI.utils.FileManager
@@ -31,6 +32,13 @@ sealed class EditorState {
 }
 
 data class UndoRedoState(val bitmap: Bitmap, val backgroundType: BackgroundType)
+
+data class StrokeStats(
+    val totalStrokes: Int,
+    val eraseStrokes: Int,
+    val restoreStrokes: Int,
+    val totalPoints: Int
+)
 
 class EditorViewModel : ViewModel() {
     // ... all existing properties ...
@@ -69,6 +77,25 @@ class EditorViewModel : ViewModel() {
     var editableMask by mutableStateOf<Bitmap?>(null)
         private set
     private val brushStrokes = mutableListOf<DrawingPath>()
+
+    // Advanced brush features
+    private val strokeHistory = mutableListOf<DrawingPath>()
+    private val undoneStrokes = mutableListOf<DrawingPath>()
+    var canUndoStroke by mutableStateOf(false)
+        private set
+    var canRedoStroke by mutableStateOf(false)
+        private set
+    var strokeCount by mutableStateOf(0)
+        private set
+
+    // Brush presets
+    val brushPresets = listOf(
+        BrushPreset("Detail", "Fine details & edges", BrushTool.PRESET_DETAIL),
+        BrushPreset("Soft", "Soft gradual removal", BrushTool.PRESET_SOFT),
+        BrushPreset("Hair", "Hair & fur restoration", BrushTool.PRESET_HAIR),
+        BrushPreset("Hard", "Sharp precise cuts", BrushTool.PRESET_HARD),
+        BrushPreset("Eraser", "Large area removal", BrushTool.PRESET_ERASER)
+    )
 
     // ... Standard Initialization and Load Logic (Unchanged) ...
     fun initialize(context: Context) {
@@ -130,9 +157,38 @@ class EditorViewModel : ViewModel() {
 
     fun applyBackground(background: BackgroundType) { applyBackgroundToForeground(background) }
 
-    fun undo() { /* existing logic */ }
-    fun redo() { /* existing logic */ }
-    fun saveBitmap(format: Bitmap.CompressFormat, onComplete: (Result<Uri>) -> Unit) { /* existing logic */ }
+    fun undo() {
+        // Undo not implemented for main editor (only for strokes in manual mode)
+    }
+
+    fun redo() {
+        // Redo not implemented for main editor (only for strokes in manual mode)
+    }
+
+    fun saveBitmap(format: Bitmap.CompressFormat, onComplete: (Result<Uri>) -> Unit) {
+        viewModelScope.launch {
+            if (editorState !is EditorState.Success) {
+                onComplete(Result.failure(Exception("No image to save")))
+                return@launch
+            }
+
+            isSaving = true
+            try {
+                val bitmap = (editorState as EditorState.Success).bitmap
+                val fileName = "BG_Removed_${System.currentTimeMillis()}"
+                val result = fileManager?.saveBitmapToGallery(bitmap, fileName, format, 100)
+                if (result != null) {
+                    onComplete(result)
+                } else {
+                    onComplete(Result.failure(Exception("Failed to save image")))
+                }
+            } catch (e: Exception) {
+                onComplete(Result.failure(e))
+            } finally {
+                isSaving = false
+            }
+        }
+    }
 
     // ... Manual Editing Mode ...
     fun enterManualEditMode() {
@@ -161,46 +217,114 @@ class EditorViewModel : ViewModel() {
             }
             isManualEditMode = false
             brushStrokes.clear()
+            strokeHistory.clear()
+            undoneStrokes.clear()
+            updateStrokeState()
         }
     }
 
-    // --- FIX IS HERE ---
+    /**
+     * Add a brush stroke with immediate processing for better feedback
+     * FIX: Process immediately to avoid red/green preview confusion
+     */
+    private var pendingProcessingJob: kotlinx.coroutines.Job? = null
+
     fun addBrushStroke(path: DrawingPath) {
         brushStrokes.add(path)
-        // Draw IMMEDIATELY. Do not wait for batching.
+        strokeHistory.add(path)
+        undoneStrokes.clear()
+        updateStrokeState()
+
+        // Cancel any pending processing
+        pendingProcessingJob?.cancel()
+
+        // Process immediately for instant feedback
+        pendingProcessingJob = viewModelScope.launch {
+            applyPendingStrokes()
+        }
+    }
+
+    /**
+     * Force apply all pending strokes immediately (called by Apply button)
+     */
+    fun applyStrokes() {
+        pendingProcessingJob?.cancel()
         applyPendingStrokes()
     }
 
-    fun applyStrokes() { applyPendingStrokes() }
-
+    /**
+     * Apply all pending brush strokes immediately
+     * OPTIMIZED: Processes in background thread for smooth performance
+     */
     private fun applyPendingStrokes() {
         if (brushStrokes.isEmpty()) return
+
         viewModelScope.launch {
             val mask = editableMask ?: return@launch
             val orig = originalBitmap ?: return@launch
-            // NOTE: We don't set isProcessing=true here to keep the UI responsive during drawing
 
-            val updatedMask = manualEditingProcessor.applyBrushStrokes(mask, brushStrokes.toList(), mask.width, mask.height)
-            editableMask = updatedMask
+            try {
+                // Process all pending strokes
+                val updatedMask = manualEditingProcessor.applyBrushStrokes(
+                    mask,
+                    brushStrokes.toList(),
+                    mask.width,
+                    mask.height
+                )
+                editableMask = updatedMask
 
-            val editedFg = manualEditingProcessor.applyEditedMask(orig, updatedMask)
-            val result = imageProcessor.composeFinalImage(editedFg, currentBackground, orig.width, orig.height, orig)
+                // Update preview immediately
+                val editedFg = manualEditingProcessor.applyEditedMask(orig, updatedMask)
+                val result = imageProcessor.composeFinalImage(
+                    editedFg,
+                    currentBackground,
+                    orig.width,
+                    orig.height,
+                    orig
+                )
 
-            editorState = EditorState.Success(result)
-            brushStrokes.clear()
+                editorState = EditorState.Success(result)
+                brushStrokes.clear()
+            } catch (e: Exception) {
+                editorState = EditorState.Error("Error applying strokes: ${e.message}")
+            }
         }
     }
 
+    /**
+     * Clear all brush strokes and reset mask
+     */
     fun clearBrushStrokes() {
+        pendingProcessingJob?.cancel()
+        brushStrokes.clear()
+        strokeHistory.clear()
+        undoneStrokes.clear()
+        updateStrokeState()
+
         viewModelScope.launch {
             val fg = foregroundBitmap ?: return@launch
-            editableMask = manualEditingProcessor.createMaskFromForeground(fg)
-            brushStrokes.clear()
-            // trigger refresh...
+            val orig = originalBitmap ?: return@launch
+
+            try {
+                // Reset mask to original from foreground
+                editableMask = manualEditingProcessor.createMaskFromForeground(fg)
+
+                // Refresh display
+                val result = imageProcessor.composeFinalImage(
+                    fg,
+                    currentBackground,
+                    orig.width,
+                    orig.height,
+                    orig
+                )
+                editorState = EditorState.Success(result)
+            } catch (e: Exception) {
+                editorState = EditorState.Error("Error clearing strokes: ${e.message}")
+            }
         }
     }
 
-    fun updateBrushTool(mode: BrushMode?, size: Float?, hardness: Float?, opacity: Float?) {
+    fun updateBrushTool(mode: BrushMode? = null, size: Float? = null, hardness: Float? = null, opacity: Float? = null) {
         currentBrushTool = currentBrushTool.copy(
             mode = mode ?: currentBrushTool.mode,
             size = size ?: currentBrushTool.size,
@@ -209,6 +333,169 @@ class EditorViewModel : ViewModel() {
         )
     }
 
-    fun smoothMask() { /* existing logic */ }
-    fun reset() { /* existing logic */ }
+    /**
+     * Load brush preset
+     */
+    fun loadBrushPreset(preset: BrushPreset) {
+        currentBrushTool = preset.brushTool
+    }
+
+    /**
+     * Undo last stroke
+     */
+    fun undoStroke() {
+        if (strokeHistory.isEmpty()) return
+
+        pendingProcessingJob?.cancel()
+
+        val lastStroke = strokeHistory.removeAt(strokeHistory.lastIndex)
+        undoneStrokes.add(lastStroke)
+        updateStrokeState()
+
+        // Reapply all remaining strokes
+        viewModelScope.launch {
+            val fg = foregroundBitmap ?: return@launch
+            val orig = originalBitmap ?: return@launch
+
+            try {
+                // Reset to original mask
+                editableMask = manualEditingProcessor.createMaskFromForeground(fg)
+
+                // Reapply remaining strokes
+                if (strokeHistory.isNotEmpty()) {
+                    val updatedMask = manualEditingProcessor.applyBrushStrokes(
+                        editableMask!!,
+                        strokeHistory.toList(),
+                        editableMask!!.width,
+                        editableMask!!.height
+                    )
+                    editableMask = updatedMask
+                }
+
+                // Update display
+                val editedFg = manualEditingProcessor.applyEditedMask(orig, editableMask!!)
+                val result = imageProcessor.composeFinalImage(
+                    editedFg,
+                    currentBackground,
+                    orig.width,
+                    orig.height,
+                    orig
+                )
+                editorState = EditorState.Success(result)
+            } catch (e: Exception) {
+                editorState = EditorState.Error("Error undoing stroke: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Redo undone stroke
+     */
+    fun redoStroke() {
+        if (undoneStrokes.isEmpty()) return
+
+        pendingProcessingJob?.cancel()
+
+        val strokeToRedo = undoneStrokes.removeAt(undoneStrokes.lastIndex)
+        strokeHistory.add(strokeToRedo)
+        brushStrokes.add(strokeToRedo)
+        updateStrokeState()
+
+        // Apply the redone stroke
+        applyPendingStrokes()
+    }
+
+    /**
+     * Update stroke state indicators
+     */
+    private fun updateStrokeState() {
+        canUndoStroke = strokeHistory.isNotEmpty()
+        canRedoStroke = undoneStrokes.isNotEmpty()
+        strokeCount = strokeHistory.size
+    }
+
+    /**
+     * Get stroke statistics
+     */
+    fun getStrokeStats(): StrokeStats {
+        val eraseCount = strokeHistory.count { it.brushTool.mode == BrushMode.ERASE }
+        val restoreCount = strokeHistory.count { it.brushTool.mode == BrushMode.RESTORE }
+        val totalPoints = strokeHistory.sumOf { it.points.size }
+
+        return StrokeStats(
+            totalStrokes = strokeHistory.size,
+            eraseStrokes = eraseCount,
+            restoreStrokes = restoreCount,
+            totalPoints = totalPoints
+        )
+    }
+
+    /**
+     * Toggle between erase and restore modes
+     */
+    fun toggleBrushMode() {
+        currentBrushTool = currentBrushTool.copy(
+            mode = if (currentBrushTool.mode == BrushMode.ERASE) BrushMode.RESTORE else BrushMode.ERASE
+        )
+    }
+
+    /**
+     * Adjust brush size by percentage
+     */
+    fun adjustBrushSize(percentage: Float) {
+        val newSize = (currentBrushTool.size * (1 + percentage)).coerceIn(
+            BrushTool.MIN_SIZE,
+            BrushTool.MAX_SIZE
+        )
+        currentBrushTool = currentBrushTool.copy(size = newSize)
+    }
+
+    /**
+     * Reset brush to default
+     */
+    fun resetBrush() {
+        currentBrushTool = BrushTool()
+    }
+
+    /**
+     * Smooth the mask edges
+     */
+    fun smoothMask() {
+        viewModelScope.launch {
+            val mask = editableMask ?: return@launch
+            val orig = originalBitmap ?: return@launch
+
+            try {
+                isProcessing = true
+
+                // Smooth the mask
+                val smoothedMask = manualEditingProcessor.smoothMask(mask)
+                editableMask = smoothedMask
+
+                // Update display
+                val editedFg = manualEditingProcessor.applyEditedMask(orig, smoothedMask)
+                val result = imageProcessor.composeFinalImage(
+                    editedFg,
+                    currentBackground,
+                    orig.width,
+                    orig.height,
+                    orig
+                )
+                editorState = EditorState.Success(result)
+            } catch (e: Exception) {
+                editorState = EditorState.Error("Error smoothing mask: ${e.message}")
+            } finally {
+                isProcessing = false
+            }
+        }
+    }
+
+    fun reset() {
+        editorState = EditorState.Idle
+        originalBitmap = null
+        foregroundBitmap = null
+        maskBitmap = null
+        currentBackground = BackgroundType.Transparent
+        isProcessing = false
+    }
 }

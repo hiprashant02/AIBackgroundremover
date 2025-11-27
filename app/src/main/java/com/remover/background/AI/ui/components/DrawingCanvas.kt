@@ -178,7 +178,7 @@ fun DrawingCanvas(
                 }
 
                 val previewColor = if (brushTool.mode == BrushMode.ERASE)
-                    Color.Red.copy(alpha=0.5f) else Color.Green.copy(alpha=0.5f)
+                    Color.Red.copy(alpha=0.3f) else Color.Green.copy(alpha=0.3f)
 
                 // FIX 2: Correct Brush Preview Size scaling
                 // We calculate how many screen pixels represent 1 bitmap pixel

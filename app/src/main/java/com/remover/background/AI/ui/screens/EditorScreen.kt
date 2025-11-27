@@ -1,40 +1,5 @@
 //package com.remover.background.AI.ui.screens
 //
-//import android.graphics.Bitmap
-//import android.widget.Toast
-//import androidx.compose.animation.*
-//import androidx.compose.animation.core.*
-//import androidx.compose.foundation.Image
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.border
-//import androidx.compose.foundation.clickable
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.lazy.LazyRow
-//import androidx.compose.foundation.lazy.items
-//import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.*
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.draw.clip
-//import androidx.compose.ui.graphics.Brush
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.asImageBitmap
-//import androidx.compose.ui.layout.ContentScale
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.unit.dp
-//import com.remover.background.AI.model.BackgroundType
-//import com.remover.background.AI.model.BrushMode
-//import com.remover.background.AI.ui.components.BrushControlPanel
-//import com.remover.background.AI.ui.components.DrawingCanvas
-//import com.remover.background.AI.ui.theme.*
-//import com.remover.background.AI.viewmodel.EditorState
-//import com.remover.background.AI.viewmodel.EditorViewModel
-//
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
 //fun EditorScreen(
@@ -49,389 +14,419 @@
 //    val canUndo = viewModel.canUndo
 //    val canRedo = viewModel.canRedo
 //    val isManualEditMode = viewModel.isManualEditMode
-//    val currentBrushTool = viewModel.currentBrushTool
+////    val currentBrushTool = viewModel.currentBrushTool
+////
+////    var showBackgroundPicker by remember { mutableStateOf(false) }
+////    var showSaveDialog by remember { mutableStateOf(false) }
+////
+////    Scaffold(
+////        topBar = {
+////            TopAppBar(
+////                title = {
+////                    Text(
+////                        "Edit Image",
+////                        fontWeight = FontWeight.Bold
+////                    )
+////                },
+////                navigationIcon = {
+////                    IconButton(onClick = onBackClick) {
+////                        Icon(Icons.Default.ArrowBack, "Back")
+////                    }
+////                },
+////                actions = {
+////                    // Undo
+////                    IconButton(
+////                        onClick = { viewModel.undo() },
+////                        enabled = canUndo && !isProcessing
+////                    ) {
+////                        Icon(
+////                            Icons.Default.Undo,
+////                            "Undo",
+////                            tint = if (canUndo && !isProcessing)
+////                                MaterialTheme.colorScheme.onSurface
+////                            else
+////                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+////                        )
+////                    }
+////
+////                    // Redo
+////                    IconButton(
+////                        onClick = { viewModel.redo() },
+////                        enabled = canRedo && !isProcessing
+////                    ) {
+////                        Icon(
+////                            Icons.Default.Redo,
+////                            "Redo",
+////                            tint = if (canRedo && !isProcessing)
+////                                MaterialTheme.colorScheme.onSurface
+////                            else
+////                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+////                        )
+////                    }
+////
+////                    // Manual Edit
+////                    IconButton(
+////                        onClick = {
+////                            if (isManualEditMode) {
+////                                viewModel.exitManualEditMode(applyChanges = true)
+////                            } else {
+////                                viewModel.enterManualEditMode()
+////                            }
+////                        },
+////                        enabled = editorState is EditorState.Success && !isProcessing
+////                    ) {
+////                        Icon(
+////                            if (isManualEditMode) Icons.Default.Check else Icons.Default.Edit,
+////                            if (isManualEditMode) "Apply Edits" else "Manual Edit",
+////                            tint = if (editorState is EditorState.Success && !isProcessing) {
+////                                if (isManualEditMode) Color.Green else MaterialTheme.colorScheme.onSurface
+////                            } else {
+////                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+////                            }
+////                        )
+////                    }
+////
+////                    // Save
+////                    IconButton(
+////                        onClick = { showSaveDialog = true },
+////                        enabled = editorState is EditorState.Success && !isSaving && !isManualEditMode
+////                    ) {
+////                        if (isSaving) {
+////                            CircularProgressIndicator(
+////                                modifier = Modifier.size(24.dp),
+////                                strokeWidth = 2.dp
+////                            )
+////                        } else {
+////                            Icon(
+////                                Icons.Default.Save,
+////                                "Save",
+////                                tint = if (editorState is EditorState.Success)
+////                                    MaterialTheme.colorScheme.onSurface
+////                                else
+////                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+////                            )
+////                        }
+////                    }
+////                },
+////                colors = TopAppBarDefaults.topAppBarColors(
+////                    containerColor = MaterialTheme.colorScheme.surface
+////                )
+////            )
+////        },
+////        bottomBar = {
+////            if (editorState is EditorState.Success) {
+////                if (isManualEditMode) {
+////                    // Show brush control panel in manual edit mode
+////                    BrushControlPanel(
+////                        brushTool = currentBrushTool,
+////                        onBrushToolChange = { newTool ->
+////                            viewModel.updateBrushTool(
+////                                mode = newTool.mode,
+////                                size = newTool.size,
+////                                hardness = newTool.hardness,
+////                                opacity = newTool.opacity
+////                            )
+////                        },
+////                        onClearStrokes = { viewModel.clearBrushStrokes() },
+////                        onSmoothMask = { viewModel.smoothMask() },
+////                        onApplyStrokes = { viewModel.applyStrokes() },
+////                        onDone = { viewModel.exitManualEditMode(applyChanges = true) },
+////                        onCancel = { viewModel.exitManualEditMode(applyChanges = false) }
+////                    )
+////                } else {
+////                    // Show background picker button normally
+////                    BottomAppBar(
+////                        containerColor = MaterialTheme.colorScheme.surface,
+////                        contentPadding = PaddingValues(16.dp)
+////                    ) {
+////                        Button(
+////                            onClick = { showBackgroundPicker = true },
+////                            modifier = Modifier.fillMaxWidth(),
+////                            enabled = !isProcessing,
+////                            colors = ButtonDefaults.buttonColors(
+////                                containerColor = Primary
+////                            ),
+////                            shape = RoundedCornerShape(12.dp)
+////                        ) {
+////                            Icon(Icons.Default.ColorLens, null)
+////                            Spacer(Modifier.width(8.dp))
+////                            Text("Change Background")
+////                        }
+////                    }
+////                }
+////            }
+////        }
+////    ) { padding ->
+////        Box(
+////            modifier = Modifier
+////                .fillMaxSize()
+////                .padding(padding)
+////        ) {
+////            when (editorState) {
+////                is EditorState.Idle -> {
+////                    // This shouldn't happen in editor screen
+////                    Box(
+////                        modifier = Modifier.fillMaxSize(),
+////                        contentAlignment = Alignment.Center
+////                    ) {
+////                        Text("No image loaded")
+////                    }
+////                }
+////
+////                is EditorState.Loading, EditorState.Idle -> {
+////                    Box(
+////                        modifier = Modifier.fillMaxSize(),
+////                        contentAlignment = Alignment.Center
+////                    ) {
+////                        Column(
+////                            horizontalAlignment = Alignment.CenterHorizontally,
+////                            verticalArrangement = Arrangement.spacedBy(16.dp)
+////                        ) {
+////                            CircularProgressIndicator(
+////                                modifier = Modifier.size(64.dp),
+////                                color = Primary,
+////                                strokeWidth = 6.dp
+////                            )
+////                            Text(
+////                                "Processing image with AI...",
+////                                style = MaterialTheme.typography.titleMedium,
+////                                color = MaterialTheme.colorScheme.onSurface
+////                            )
+////                            Text(
+////                                "This may take a few seconds",
+////                                style = MaterialTheme.typography.bodyMedium,
+////                                color = MaterialTheme.colorScheme.onSurfaceVariant
+////                            )
+////                        }
+////                    }
+////                }
+////
+////                is EditorState.Success -> {
+////                    Column(
+////                        modifier = Modifier.fillMaxSize()
+////                    ) {
+////                        // Image Preview with Drawing Canvas
+////                        Box(
+////                            modifier = Modifier
+////                                .fillMaxWidth()
+////                                .weight(1f)
+////                                .padding(16.dp)
+////                                .clip(RoundedCornerShape(20.dp))
+////                                .background(
+////                                    brush = Brush.linearGradient(
+////                                        colors = listOf(
+////                                            Color(0xFFEEEEEE),
+////                                            Color(0xFFCCCCCC)
+////                                        )
+////                                    )
+////                                )
+////                                .border(
+////                                    width = 1.dp,
+////                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+////                                    shape = RoundedCornerShape(20.dp)
+////                                ),
+////                            contentAlignment = Alignment.Center
+////                        ) {
+////                            if (isManualEditMode) {
+////                                // Drawing canvas for manual editing
+////                                DrawingCanvas(
+////                                    bitmap = editorState.bitmap,
+////                                    brushTool = currentBrushTool,
+////                                    isEnabled = !isProcessing,
+////                                    onDrawingPath = { path ->
+////                                        viewModel.addBrushStroke(path)
+////                                    },
+////                                    modifier = Modifier.fillMaxSize()
+////                                )
+////
+////                                // Brush mode indicator
+////                                Box(
+////                                    modifier = Modifier
+////                                        .align(Alignment.TopStart)
+////                                        .padding(16.dp)
+////                                ) {
+////                                    Surface(
+////                                        color = when (currentBrushTool.mode) {
+////                                            BrushMode.ERASE -> Color.Red.copy(alpha = 0.9f)
+////                                            BrushMode.RESTORE -> Color.Green.copy(alpha = 0.9f)
+////                                        },
+////                                        shape = RoundedCornerShape(8.dp)
+////                                    ) {
+////                                        Row(
+////                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+////                                            verticalAlignment = Alignment.CenterVertically,
+////                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+////                                        ) {
+////                                            Icon(
+////                                                when (currentBrushTool.mode) {
+////                                                    BrushMode.ERASE -> Icons.Default.Delete
+////                                                    BrushMode.RESTORE -> Icons.Default.Brush
+////                                                },
+////                                                contentDescription = null,
+////                                                tint = Color.White,
+////                                                modifier = Modifier.size(20.dp)
+////                                            )
+////                                            Text(
+////                                                when (currentBrushTool.mode) {
+////                                                    BrushMode.ERASE -> "Erase"
+////                                                    BrushMode.RESTORE -> "Restore"
+////                                                },
+////                                                color = Color.White,
+////                                                style = MaterialTheme.typography.labelMedium,
+////                                                fontWeight = FontWeight.Bold
+////                                            )
+////                                        }
+////                                    }
+////                                }
+////                            } else {
+////                                // Normal image preview
+////                                Image(
+////                                    bitmap = editorState.bitmap.asImageBitmap(),
+////                                    contentDescription = "Edited Image",
+////                                    modifier = Modifier.fillMaxSize(),
+////                                    contentScale = ContentScale.Fit
+////                                )
+////                            }
+////
+////                            // Processing overlay
+////                            if (isProcessing) {
+////                                Box(
+////                                    modifier = Modifier
+////                                        .fillMaxSize()
+////                                        .background(Color.Black.copy(alpha = 0.5f)),
+////                                    contentAlignment = Alignment.Center
+////                                ) {
+////                                    CircularProgressIndicator(
+////                                        color = Color.White,
+////                                        strokeWidth = 4.dp
+////                                    )
+////                                }
+////                            }
+////                        }
+////                    }
+////                }
+////
+////                is EditorState.Error -> {
+////                    Box(
+////                        modifier = Modifier.fillMaxSize(),
+////                        contentAlignment = Alignment.Center
+////                    ) {
+////                        Column(
+////                            horizontalAlignment = Alignment.CenterHorizontally,
+////                            verticalArrangement = Arrangement.spacedBy(16.dp)
+////                        ) {
+////                            Icon(
+////                                Icons.Default.Error,
+////                                contentDescription = null,
+////                                modifier = Modifier.size(64.dp),
+////                                tint = MaterialTheme.colorScheme.error
+////                            )
+////                            Text(
+////                                "Error",
+////                                style = MaterialTheme.typography.titleLarge,
+////                                fontWeight = FontWeight.Bold
+////                            )
+////                            Text(
+////                                editorState.message,
+////                                style = MaterialTheme.typography.bodyMedium,
+////                                color = MaterialTheme.colorScheme.onSurfaceVariant
+////                            )
+////                            Button(onClick = onBackClick) {
+////                                Text("Go Back")
+////                            }
+////                        }
+////                    }
+////                }
+////            }
+////        }
+////    }
+////
+////    // Background Picker Bottom Sheet
+////    if (showBackgroundPicker) {
+////        BackgroundPickerSheet(
+////            currentBackground = currentBackground,
+////            onBackgroundSelected = { background ->
+////                viewModel.applyBackground(background)
+////                showBackgroundPicker = false
+////            },
+////            onDismiss = { showBackgroundPicker = false }
+////        )
+////    }
+////
+////    // Save Dialog
+////    if (showSaveDialog) {
+////        SaveDialog(
+////            onSave = { format ->
+////                viewModel.saveBitmap(format) { result ->
+////                    result.fold(
+////                        onSuccess = {
+////                            Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
+////                        },
+////                        onFailure = { error ->
+////                            Toast.makeText(context, "Failed to save: ${error.message}", Toast.LENGTH_SHORT).show()
+////                        }
+////                    )
+////                }
+////                showSaveDialog = false
+////            },
+////            onDismiss = { showSaveDialog = false }
+////        )
+////    }
+////}
+////
 //
-//    var showBackgroundPicker by remember { mutableStateOf(false) }
-//    var showSaveDialog by remember { mutableStateOf(false) }
+////
 //
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        "Edit Image",
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                },
-//                navigationIcon = {
-//                    IconButton(onClick = onBackClick) {
-//                        Icon(Icons.Default.ArrowBack, "Back")
-//                    }
-//                },
-//                actions = {
-//                    // Undo
-//                    IconButton(
-//                        onClick = { viewModel.undo() },
-//                        enabled = canUndo && !isProcessing
-//                    ) {
-//                        Icon(
-//                            Icons.Default.Undo,
-//                            "Undo",
-//                            tint = if (canUndo && !isProcessing)
-//                                MaterialTheme.colorScheme.onSurface
-//                            else
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                        )
-//                    }
 //
-//                    // Redo
-//                    IconButton(
-//                        onClick = { viewModel.redo() },
-//                        enabled = canRedo && !isProcessing
-//                    ) {
-//                        Icon(
-//                            Icons.Default.Redo,
-//                            "Redo",
-//                            tint = if (canRedo && !isProcessing)
-//                                MaterialTheme.colorScheme.onSurface
-//                            else
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                        )
-//                    }
-//
-//                    // Manual Edit
-//                    IconButton(
-//                        onClick = {
-//                            if (isManualEditMode) {
-//                                viewModel.exitManualEditMode(applyChanges = true)
-//                            } else {
-//                                viewModel.enterManualEditMode()
-//                            }
-//                        },
-//                        enabled = editorState is EditorState.Success && !isProcessing
-//                    ) {
-//                        Icon(
-//                            if (isManualEditMode) Icons.Default.Check else Icons.Default.Edit,
-//                            if (isManualEditMode) "Apply Edits" else "Manual Edit",
-//                            tint = if (editorState is EditorState.Success && !isProcessing) {
-//                                if (isManualEditMode) Color.Green else MaterialTheme.colorScheme.onSurface
-//                            } else {
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                            }
-//                        )
-//                    }
-//
-//                    // Save
-//                    IconButton(
-//                        onClick = { showSaveDialog = true },
-//                        enabled = editorState is EditorState.Success && !isSaving && !isManualEditMode
-//                    ) {
-//                        if (isSaving) {
-//                            CircularProgressIndicator(
-//                                modifier = Modifier.size(24.dp),
-//                                strokeWidth = 2.dp
-//                            )
-//                        } else {
-//                            Icon(
-//                                Icons.Default.Save,
-//                                "Save",
-//                                tint = if (editorState is EditorState.Success)
-//                                    MaterialTheme.colorScheme.onSurface
-//                                else
-//                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                            )
-//                        }
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = MaterialTheme.colorScheme.surface
-//                )
-//            )
-//        },
-//        bottomBar = {
-//            if (editorState is EditorState.Success) {
-//                if (isManualEditMode) {
-//                    // Show brush control panel in manual edit mode
-//                    BrushControlPanel(
-//                        brushTool = currentBrushTool,
-//                        onBrushToolChange = { newTool ->
-//                            viewModel.updateBrushTool(
-//                                mode = newTool.mode,
-//                                size = newTool.size,
-//                                hardness = newTool.hardness,
-//                                opacity = newTool.opacity
-//                            )
-//                        },
-//                        onClearStrokes = { viewModel.clearBrushStrokes() },
-//                        onSmoothMask = { viewModel.smoothMask() },
-//                        onApplyStrokes = { viewModel.applyStrokes() },
-//                        onDone = { viewModel.exitManualEditMode(applyChanges = true) },
-//                        onCancel = { viewModel.exitManualEditMode(applyChanges = false) }
-//                    )
-//                } else {
-//                    // Show background picker button normally
-//                    BottomAppBar(
-//                        containerColor = MaterialTheme.colorScheme.surface,
-//                        contentPadding = PaddingValues(16.dp)
-//                    ) {
-//                        Button(
-//                            onClick = { showBackgroundPicker = true },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            enabled = !isProcessing,
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = Primary
-//                            ),
-//                            shape = RoundedCornerShape(12.dp)
-//                        ) {
-//                            Icon(Icons.Default.ColorLens, null)
-//                            Spacer(Modifier.width(8.dp))
-//                            Text("Change Background")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    ) { padding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding)
-//        ) {
-//            when (editorState) {
-//                is EditorState.Idle -> {
-//                    // This shouldn't happen in editor screen
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Text("No image loaded")
-//                    }
-//                }
-//
-//                is EditorState.Loading, EditorState.Idle -> {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                            verticalArrangement = Arrangement.spacedBy(16.dp)
-//                        ) {
-//                            CircularProgressIndicator(
-//                                modifier = Modifier.size(64.dp),
-//                                color = Primary,
-//                                strokeWidth = 6.dp
-//                            )
-//                            Text(
-//                                "Processing image with AI...",
-//                                style = MaterialTheme.typography.titleMedium,
-//                                color = MaterialTheme.colorScheme.onSurface
-//                            )
-//                            Text(
-//                                "This may take a few seconds",
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                is EditorState.Success -> {
-//                    Column(
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-//                        // Image Preview with Drawing Canvas
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .weight(1f)
-//                                .padding(16.dp)
-//                                .clip(RoundedCornerShape(20.dp))
-//                                .background(
-//                                    brush = Brush.linearGradient(
-//                                        colors = listOf(
-//                                            Color(0xFFEEEEEE),
-//                                            Color(0xFFCCCCCC)
-//                                        )
-//                                    )
-//                                )
-//                                .border(
-//                                    width = 1.dp,
-//                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-//                                    shape = RoundedCornerShape(20.dp)
-//                                ),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            if (isManualEditMode) {
-//                                // Drawing canvas for manual editing
-//                                DrawingCanvas(
-//                                    bitmap = editorState.bitmap,
-//                                    brushTool = currentBrushTool,
-//                                    isEnabled = !isProcessing,
-//                                    onDrawingPath = { path ->
-//                                        viewModel.addBrushStroke(path)
-//                                    },
-//                                    modifier = Modifier.fillMaxSize()
-//                                )
-//
-//                                // Brush mode indicator
-//                                Box(
-//                                    modifier = Modifier
-//                                        .align(Alignment.TopStart)
-//                                        .padding(16.dp)
-//                                ) {
-//                                    Surface(
-//                                        color = when (currentBrushTool.mode) {
-//                                            BrushMode.ERASE -> Color.Red.copy(alpha = 0.9f)
-//                                            BrushMode.RESTORE -> Color.Green.copy(alpha = 0.9f)
-//                                        },
-//                                        shape = RoundedCornerShape(8.dp)
-//                                    ) {
-//                                        Row(
-//                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-//                                            verticalAlignment = Alignment.CenterVertically,
-//                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-//                                        ) {
-//                                            Icon(
-//                                                when (currentBrushTool.mode) {
-//                                                    BrushMode.ERASE -> Icons.Default.Delete
-//                                                    BrushMode.RESTORE -> Icons.Default.Brush
-//                                                },
-//                                                contentDescription = null,
-//                                                tint = Color.White,
-//                                                modifier = Modifier.size(20.dp)
-//                                            )
-//                                            Text(
-//                                                when (currentBrushTool.mode) {
-//                                                    BrushMode.ERASE -> "Erase"
-//                                                    BrushMode.RESTORE -> "Restore"
-//                                                },
-//                                                color = Color.White,
-//                                                style = MaterialTheme.typography.labelMedium,
-//                                                fontWeight = FontWeight.Bold
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            } else {
-//                                // Normal image preview
-//                                Image(
-//                                    bitmap = editorState.bitmap.asImageBitmap(),
-//                                    contentDescription = "Edited Image",
-//                                    modifier = Modifier.fillMaxSize(),
-//                                    contentScale = ContentScale.Fit
-//                                )
-//                            }
-//
-//                            // Processing overlay
-//                            if (isProcessing) {
-//                                Box(
-//                                    modifier = Modifier
-//                                        .fillMaxSize()
-//                                        .background(Color.Black.copy(alpha = 0.5f)),
-//                                    contentAlignment = Alignment.Center
-//                                ) {
-//                                    CircularProgressIndicator(
-//                                        color = Color.White,
-//                                        strokeWidth = 4.dp
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                is EditorState.Error -> {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                            verticalArrangement = Arrangement.spacedBy(16.dp)
-//                        ) {
-//                            Icon(
-//                                Icons.Default.Error,
-//                                contentDescription = null,
-//                                modifier = Modifier.size(64.dp),
-//                                tint = MaterialTheme.colorScheme.error
-//                            )
-//                            Text(
-//                                "Error",
-//                                style = MaterialTheme.typography.titleLarge,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                            Text(
-//                                editorState.message,
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant
-//                            )
-//                            Button(onClick = onBackClick) {
-//                                Text("Go Back")
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    // Background Picker Bottom Sheet
-//    if (showBackgroundPicker) {
-//        BackgroundPickerSheet(
-//            currentBackground = currentBackground,
-//            onBackgroundSelected = { background ->
-//                viewModel.applyBackground(background)
-//                showBackgroundPicker = false
-//            },
-//            onDismiss = { showBackgroundPicker = false }
-//        )
-//    }
-//
-//    // Save Dialog
-//    if (showSaveDialog) {
-//        SaveDialog(
-//            onSave = { format ->
-//                viewModel.saveBitmap(format) { result ->
-//                    result.fold(
-//                        onSuccess = {
-//                            Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
-//                        },
-//                        onFailure = { error ->
-//                            Toast.makeText(context, "Failed to save: ${error.message}", Toast.LENGTH_SHORT).show()
-//                        }
-//                    )
-//                }
-//                showSaveDialog = false
-//            },
-//            onDismiss = { showSaveDialog = false }
-//        )
-//    }
-//}
-//
+////
+@file:OptIn(ExperimentalMaterial3Api::class)
 
-//
-
-
-//
 package com.remover.background.AI.ui.screens
+
 
 import android.graphics.Bitmap
 import android.widget.Toast
-import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -443,11 +438,303 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.remover.background.AI.model.BackgroundType
-import com.remover.background.AI.ui.components.BrushControlPanel
+import com.remover.background.AI.model.BrushMode
+import com.remover.background.AI.ui.components.EnhancedBrushControlPanel
 import com.remover.background.AI.ui.components.DrawingCanvas
-import com.remover.background.AI.ui.theme.*
+import com.remover.background.AI.ui.theme.Primary
+import com.remover.background.AI.ui.theme.PrimaryLight
+import com.remover.background.AI.ui.theme.Secondary
+import com.remover.background.AI.ui.theme.SecondaryLight
 import com.remover.background.AI.viewmodel.EditorState
 import com.remover.background.AI.viewmodel.EditorViewModel
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.filled.Redo
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FloatingActionButton
+
+@Composable
+fun MinimalBrushBar(
+    viewModel: EditorViewModel,
+    onDone: () -> Unit,
+    onCancel: () -> Unit
+) {
+    var showSettings by remember { mutableStateOf(false) }
+    val brushTool = viewModel.currentBrushTool
+    val strokeCount = viewModel.strokeCount
+
+    // Single sleek row at bottom
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color.Black.copy(0.85f))
+            .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(28.dp))
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left: Cancel
+        IconButton(
+            onClick = onCancel,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                Icons.Default.Close,
+                "Cancel",
+                tint = Color(0xFFFF5252),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Center: Erase & Restore Buttons + Stroke Count + Settings
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Both mode buttons visible
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Black.copy(0.3f))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Erase Button
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (brushTool.mode == BrushMode.ERASE)
+                                Color(0xFFFF5252).copy(0.9f)
+                            else Color.Transparent
+                        )
+                        .clickable { viewModel.updateBrushTool(mode = BrushMode.ERASE) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        "ERASE",
+                        color = if (brushTool.mode == BrushMode.ERASE) Color.White else Color(0xFFFF5252),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (brushTool.mode == BrushMode.ERASE) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+
+                // Restore Button
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (brushTool.mode == BrushMode.RESTORE)
+                                Color(0xFF4CAF50).copy(0.9f)
+                            else Color.Transparent
+                        )
+                        .clickable { viewModel.updateBrushTool(mode = BrushMode.RESTORE) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        "RESTORE",
+                        color = if (brushTool.mode == BrushMode.RESTORE) Color.White else Color(0xFF4CAF50),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (brushTool.mode == BrushMode.RESTORE) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+
+            // Stroke Counter
+            if (strokeCount > 0) {
+                Text(
+                    "$strokeCount",
+                    color = Color.White.copy(0.6f),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Settings button
+            IconButton(
+                onClick = { showSettings = true },
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.Settings,
+                    "Settings",
+                    tint = Primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        // Right: Done
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
+                    )
+                )
+                .clickable(onClick = onDone)
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+        ) {
+            Text(
+                "Done",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    }
+
+    // Settings BottomSheet
+    if (showSettings) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettings = false },
+            containerColor = Color(0xFF1A1A2E),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header
+                Text(
+                    "Brush Settings",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                // Quick Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            viewModel.clearBrushStrokes()
+                            showSettings = false
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.1f))
+                    ) {
+                        Text("Clear", color = Color.White)
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.smoothMask()
+                            showSettings = false
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.1f))
+                    ) {
+                        Text("Smooth", color = Color.White)
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.applyStrokes()
+                            showSettings = false
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                    ) {
+                        Text("Apply", color = Color.White)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Brush Size
+                Text(
+                    "Brush Size: ${brushTool.size.toInt()}px",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                androidx.compose.material3.Slider(
+                    value = brushTool.size,
+                    onValueChange = { viewModel.updateBrushTool(size = it) },
+                    valueRange = 10f..200f,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        thumbColor = Primary,
+                        activeTrackColor = Primary
+                    )
+                )
+
+                // Hardness
+                Text(
+                    "Hardness: ${(brushTool.hardness * 100).toInt()}%",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                androidx.compose.material3.Slider(
+                    value = brushTool.hardness,
+                    onValueChange = { viewModel.updateBrushTool(hardness = it) },
+                    valueRange = 0.1f..1f,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        thumbColor = Primary,
+                        activeTrackColor = Primary
+                    )
+                )
+
+                // Opacity
+                Text(
+                    "Opacity: ${(brushTool.opacity * 100).toInt()}%",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                androidx.compose.material3.Slider(
+                    value = brushTool.opacity,
+                    onValueChange = { viewModel.updateBrushTool(opacity = it) },
+                    valueRange = 0.1f..1f,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        thumbColor = Primary,
+                        activeTrackColor = Primary
+                    )
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                // Brush Presets
+                Text(
+                    "Presets",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(viewModel.brushPresets) { preset ->
+                        Button(
+                            onClick = { viewModel.loadBrushPreset(preset) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.1f))
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(preset.name, style = MaterialTheme.typography.labelMedium, color = Color.White)
+                                Text(
+                                    "${preset.brushTool.size.toInt()}px",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+}
 
 @Composable
 fun SaveDialog(
@@ -490,6 +777,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val editorState = viewModel.editorState
     val isManual = viewModel.isManualEditMode
     var showBgPicker by remember { mutableStateOf(false) }
+    var showBrushControls by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF121212))) {
 
@@ -520,11 +808,18 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
 
         // 2. TOP FLOATING BAR
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 16.dp, end = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 50.dp, start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(
-                onClick = onBackClick,
+                onClick = {
+                    if (isManual) {
+                        // Exit manual edit mode, not the entire screen
+                        viewModel.exitManualEditMode(false)
+                    } else {
+                        onBackClick()
+                    }
+                },
                 modifier = Modifier.clip(CircleShape).background(Color.Black.copy(0.5f))
             ) {
                 Icon(Icons.Default.ArrowBack, null, tint = Color.White)
@@ -543,16 +838,44 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             }
         }
 
-        // 3. BOTTOM FLOATING CONTROLS
+        // 3. TOP RIGHT CONTROLS (Manual Edit Mode) - Moved down to avoid cutoff
+        if (editorState is EditorState.Success && isManual) {
+            // Undo/Redo floating buttons at top right
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 50.dp, end = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Undo Button
+                FloatingActionButton(
+                    onClick = { viewModel.undoStroke() },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = Color.Black.copy(0.7f),
+                    contentColor = if (viewModel.canUndoStroke) Color.White else Color.Gray
+                ) {
+                    Icon(Icons.Default.Undo, "Undo", modifier = Modifier.size(24.dp))
+                }
+
+                // Redo Button
+                FloatingActionButton(
+                    onClick = { viewModel.redoStroke() },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = Color.Black.copy(0.7f),
+                    contentColor = if (viewModel.canRedoStroke) Color.White else Color.Gray
+                ) {
+                    Icon(Icons.Default.Redo, "Redo", modifier = Modifier.size(24.dp))
+                }
+            }
+        }
+
+        // 4. BOTTOM MINIMAL CONTROLS
         if (editorState is EditorState.Success) {
             Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                 if (isManual) {
-                    BrushControlPanel(
-                        brushTool = viewModel.currentBrushTool,
-                        onBrushToolChange = { viewModel.updateBrushTool(it.mode, it.size, it.hardness, it.opacity) },
-                        onClearStrokes = { viewModel.clearBrushStrokes() },
-                        onSmoothMask = { viewModel.smoothMask() },
-                        onApplyStrokes = { viewModel.applyStrokes() },
+                    // Minimal brush control bar
+                    MinimalBrushBar(
+                        viewModel = viewModel,
                         onDone = { viewModel.exitManualEditMode(true) },
                         onCancel = { viewModel.exitManualEditMode(false) }
                     )
@@ -576,6 +899,47 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.4f)), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Primary)
             }
+        }
+    }
+
+    // Brush Controls BottomSheet
+    if (showBrushControls && isManual) {
+        ModalBottomSheet(
+            onDismissRequest = { showBrushControls = false },
+            containerColor = Color(0xFF1E1E1E)
+        ) {
+            EnhancedBrushControlPanel(
+                brushTool = viewModel.currentBrushTool,
+                brushPresets = viewModel.brushPresets,
+                canUndoStroke = viewModel.canUndoStroke,
+                canRedoStroke = viewModel.canRedoStroke,
+                strokeCount = viewModel.strokeCount,
+                onBrushToolChange = { newTool ->
+                    viewModel.updateBrushTool(
+                        mode = newTool.mode,
+                        size = newTool.size,
+                        hardness = newTool.hardness,
+                        opacity = newTool.opacity
+                    )
+                },
+                onPresetSelected = { preset ->
+                    viewModel.loadBrushPreset(preset)
+                },
+                onUndoStroke = { viewModel.undoStroke() },
+                onRedoStroke = { viewModel.redoStroke() },
+                onToggleMode = { viewModel.toggleBrushMode() },
+                onClearStrokes = { viewModel.clearBrushStrokes() },
+                onSmoothMask = { viewModel.smoothMask() },
+                onApplyStrokes = { viewModel.applyStrokes() },
+                onDone = {
+                    showBrushControls = false
+                    viewModel.exitManualEditMode(true)
+                },
+                onCancel = {
+                    showBrushControls = false
+                    viewModel.exitManualEditMode(false)
+                }
+            )
         }
     }
 
