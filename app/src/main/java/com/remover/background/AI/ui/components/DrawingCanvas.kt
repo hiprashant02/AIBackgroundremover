@@ -54,9 +54,6 @@ fun DrawingCanvas(
             modifier = Modifier
                 .fillMaxSize()
                 .onSizeChanged { size -> canvasSize = size }
-                // FIX 1: Move pointerInput BEFORE graphicsLayer
-                // This ensures we get RAW screen coordinates, making your manual math in
-                // screenToImageCoordinates correct.
                 .pointerInput(isEnabled, brushTool, imageBounds) {
                     awaitPointerEventScope {
                         while (true) {
@@ -105,8 +102,6 @@ fun DrawingCanvas(
                                 event.changes.size == 1 && isEnabled -> {
                                     val change = event.changes.first()
 
-                                    // With pointerInput before graphicsLayer, `change.position` is untransformed screen coords.
-                                    // Your screenToImageCoordinates math will now work correctly.
                                     val imagePos = screenToImageCoordinates(
                                         change.position,
                                         imageBounds,
@@ -115,7 +110,16 @@ fun DrawingCanvas(
                                         canvasSize
                                     )
 
-                                    if (imagePos != null) {
+                                    // FIX: Check for UP event (finish drawing) regardless of position validity
+                                    if (!change.pressed && isDrawing) {
+                                        if (currentPath.isNotEmpty()) {
+                                            onDrawingPath(DrawingPath(currentPath, brushTool))
+                                        }
+                                        isDrawing = false
+                                        currentPath = emptyList()
+                                    }
+                                    // Handle DOWN/MOVE events only if inside image bounds
+                                    else if (imagePos != null) {
                                         if (change.pressed && !change.previousPressed) {
                                             isDrawing = true
                                             currentPath = listOf(imagePos)
@@ -123,12 +127,6 @@ fun DrawingCanvas(
                                         } else if (change.pressed && change.positionChanged() && isDrawing) {
                                             currentPath = currentPath + imagePos
                                             change.consume()
-                                        } else if (!change.pressed && isDrawing) {
-                                            if (currentPath.isNotEmpty()) {
-                                                onDrawingPath(DrawingPath(currentPath, brushTool))
-                                            }
-                                            isDrawing = false
-                                            currentPath = emptyList()
                                         }
                                     }
                                 }
@@ -142,7 +140,6 @@ fun DrawingCanvas(
                         }
                     }
                 }
-                // GraphicsLayer is now applied AFTER pointer input, only affecting visual drawing
                 .graphicsLayer(
                     scaleX = scale,
                     scaleY = scale,
@@ -180,12 +177,7 @@ fun DrawingCanvas(
                 val previewColor = if (brushTool.mode == BrushMode.ERASE)
                     Color.Red.copy(alpha=0.3f) else Color.Green.copy(alpha=0.3f)
 
-                // FIX 2: Correct Brush Preview Size scaling
-                // We calculate how many screen pixels represent 1 bitmap pixel
                 val bitmapToScreenScale = if (bitmap.width > 0) imageBounds.width / bitmap.width.toFloat() else 1f
-
-                // We apply that ratio to the brush size.
-                // We do NOT divide by 'scale' (zoom) because the graphicsLayer scales the drawing for us.
                 val visualStrokeWidth = brushTool.size * bitmapToScreenScale
 
                 drawPath(
@@ -201,7 +193,6 @@ fun DrawingCanvas(
     }
 }
 
-// Keep helper functions exactly as they were, they are correct now that modifier order is fixed.
 private fun calculateImageBounds(canvasSize: IntSize, imageAspectRatio: Float): androidx.compose.ui.geometry.Rect {
     val canvasAspectRatio = canvasSize.width.toFloat() / canvasSize.height.toFloat()
     val (width, height) = if (imageAspectRatio > canvasAspectRatio) {

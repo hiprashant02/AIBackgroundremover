@@ -249,45 +249,54 @@ class EditorViewModel : ViewModel() {
      */
     fun applyStrokes() {
         pendingProcessingJob?.cancel()
-        applyPendingStrokes()
+        pendingProcessingJob = viewModelScope.launch {
+            applyPendingStrokes()
+        }
     }
 
     /**
      * Apply all pending brush strokes immediately
      * OPTIMIZED: Processes in background thread for smooth performance
      */
-    private fun applyPendingStrokes() {
+    private suspend fun applyPendingStrokes() {
         if (brushStrokes.isEmpty()) return
 
-        viewModelScope.launch {
-            val mask = editableMask ?: return@launch
-            val orig = originalBitmap ?: return@launch
+        // We use the outer job (pendingProcessingJob) to handle cancellation.
+        // If cancelled, execution stops here and brushStrokes are NOT cleared,
+        // allowing the next job to process them.
 
-            try {
-                // Process all pending strokes
-                val updatedMask = manualEditingProcessor.applyBrushStrokes(
-                    mask,
-                    brushStrokes.toList(),
-                    mask.width,
-                    mask.height
-                )
-                editableMask = updatedMask
+        val mask = editableMask ?: return
+        val orig = originalBitmap ?: return
 
-                // Update preview immediately
-                val editedFg = manualEditingProcessor.applyEditedMask(orig, updatedMask)
-                val result = imageProcessor.composeFinalImage(
-                    editedFg,
-                    currentBackground,
-                    orig.width,
-                    orig.height,
-                    orig
-                )
+        try {
+            // Process all pending strokes
+            val updatedMask = manualEditingProcessor.applyBrushStrokes(
+                mask,
+                brushStrokes.toList(),
+                mask.width,
+                mask.height
+            )
 
-                editorState = EditorState.Success(result)
-                brushStrokes.clear()
-            } catch (e: Exception) {
-                editorState = EditorState.Error("Error applying strokes: ${e.message}")
-            }
+            // If we reached here, processing was successful and not cancelled
+            editableMask = updatedMask
+
+            // Update preview
+            val editedFg = manualEditingProcessor.applyEditedMask(orig, updatedMask)
+            val result = imageProcessor.composeFinalImage(
+                editedFg,
+                currentBackground,
+                orig.width,
+                orig.height,
+                orig
+            )
+
+            editorState = EditorState.Success(result)
+
+            // Safely clear strokes now that they are applied
+            brushStrokes.clear()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            editorState = EditorState.Error("Error applying strokes: ${e.message}")
         }
     }
 
@@ -402,7 +411,9 @@ class EditorViewModel : ViewModel() {
         updateStrokeState()
 
         // Apply the redone stroke
-        applyPendingStrokes()
+        pendingProcessingJob = viewModelScope.launch {
+            applyPendingStrokes()
+        }
     }
 
     /**
