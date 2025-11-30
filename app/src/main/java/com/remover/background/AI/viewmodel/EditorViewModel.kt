@@ -19,7 +19,9 @@ import com.remover.background.AI.model.DrawingPath
 import com.remover.background.AI.utils.FileManager
 import com.remover.background.AI.utils.ImageProcessor
 import com.remover.background.AI.utils.ManualEditingProcessor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 
 // ... EditorState and UndoRedoState classes ...
@@ -69,6 +71,11 @@ class EditorViewModel : ViewModel() {
     var editableMask by mutableStateOf<Bitmap?>(null)
         private set
     private val brushStrokes = mutableListOf<DrawingPath>()
+
+    // State to restore when canceling manual edit mode
+    private var savedForegroundBeforeManualEdit: Bitmap? = null
+    private var savedDisplayBitmapBeforeManualEdit: Bitmap? = null
+    private var savedBackgroundBeforeManualEdit: BackgroundType? = null
 
     // ... Standard Initialization and Load Logic (Unchanged) ...
     fun initialize(context: Context) {
@@ -129,24 +136,129 @@ class EditorViewModel : ViewModel() {
     }
 
     fun applyBackground(background: BackgroundType) { applyBackgroundToForeground(background) }
+    
+    fun saveBitmap(format: Bitmap.CompressFormat, onComplete: (Result<Uri>) -> Unit) {
+        viewModelScope.launch {
+            isSaving = true
+            try {
+                val bitmap = (editorState as? EditorState.Success)?.bitmap
+                if (bitmap != null) {
+                    val fileName = "edited_${System.currentTimeMillis()}.png"
+                    val result = fileManager?.saveBitmapToGallery(bitmap, fileName, format)
+                    if (result != null) {
+                        onComplete(result)
+                    } else {
+                        onComplete(Result.failure(Exception("FileManager not initialized")))
+                    }
+                } else {
+                    onComplete(Result.failure(Exception("No image to save")))
+                }
+            } catch (e: Exception) {
+                onComplete(Result.failure(e))
+            } finally {
+                isSaving = false
+            }
+        }
+    }
+    
+    fun applyStrokes() { applyPendingStrokes() }
 
-    fun undo() { /* existing logic */ }
-    fun redo() { /* existing logic */ }
-    fun saveBitmap(format: Bitmap.CompressFormat, onComplete: (Result<Uri>) -> Unit) { /* existing logic */ }
+    // --- Undo / Redo Logic ---
+    private fun saveToUndoStack() {
+        val currentFg = foregroundBitmap ?: return
+        val currentMask = editableMask ?: return
+        
+        // We save a COPY of the bitmaps because they are mutable
+        val fgCopy = currentFg.copy(currentFg.config ?: Bitmap.Config.ARGB_8888, true)
+        val maskCopy = currentMask.copy(currentMask.config ?: Bitmap.Config.ARGB_8888, true)
+        
+        undoStack.add(UndoRedoState(fgCopy, maskCopy))
+        redoStack.clear()
+        updateUndoRedoState()
+    }
 
-    // ... Manual Editing Mode ...
+    private fun updateUndoRedoState() {
+        canUndo = undoStack.isNotEmpty()
+        canRedo = redoStack.isNotEmpty()
+    }
+
+    fun undo() {
+        if (undoStack.isEmpty()) return
+        
+        val currentState = UndoRedoState(
+            foregroundBitmap?.copy(foregroundBitmap!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return,
+            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return
+        )
+        redoStack.add(currentState)
+        
+        val previousState = undoStack.removeAt(undoStack.lastIndex)
+        restoreState(previousState)
+        updateUndoRedoState()
+    }
+
+    fun redo() {
+        if (redoStack.isEmpty()) return
+        
+        val currentState = UndoRedoState(
+            foregroundBitmap?.copy(foregroundBitmap!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return,
+            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return
+        )
+        undoStack.add(currentState)
+        
+        val nextState = redoStack.removeAt(redoStack.lastIndex)
+        restoreState(nextState)
+        updateUndoRedoState()
+    }
+
+    private fun restoreState(state: UndoRedoState) {
+        viewModelScope.launch {
+            foregroundBitmap = state.foregroundBitmap
+            editableMask = state.maskBitmap
+            
+            val orig = originalBitmap ?: return@launch
+            val result = imageProcessor.composeFinalImage(
+                state.foregroundBitmap, 
+                currentBackground, 
+                orig.width, 
+                orig.height, 
+                orig
+            )
+            editorState = EditorState.Success(result)
+        }
+    }
+
+    // --- Manual Editing Fixes ---
+
     fun enterManualEditMode() {
         viewModelScope.launch {
             val fg = foregroundBitmap ?: return@launch
+
+            // Save current state so we can restore it on cancel
+            savedForegroundBeforeManualEdit = fg.copy(fg.config ?: Bitmap.Config.ARGB_8888, true)
+            val currentBitmap = (editorState as? EditorState.Success)?.bitmap
+            if (currentBitmap != null) {
+                savedDisplayBitmapBeforeManualEdit = currentBitmap.copy(currentBitmap.config ?: Bitmap.Config.ARGB_8888, true)
+                savedBackgroundBeforeManualEdit = currentBackground
+            }
+
+            // Create a fresh mask from the current foreground
             editableMask = manualEditingProcessor.createMaskFromForeground(fg)
             currentBrushTool = currentBrushTool.copy(size = manualEditingProcessor.calculateOptimalBrushSize(fg.width, fg.height))
             isManualEditMode = true
+            
+            // Clear stacks when entering new edit session to avoid state confusion
+            undoStack.clear()
+            redoStack.clear()
+            updateUndoRedoState()
         }
     }
 
     fun exitManualEditMode(apply: Boolean) {
         viewModelScope.launch {
             if (apply) {
+                // Save current state to undo stack BEFORE applying final changes
+                saveToUndoStack()
+                
                 if (brushStrokes.isNotEmpty()) applyPendingStrokes()
                 val mask = editableMask
                 val orig = originalBitmap
@@ -158,47 +270,107 @@ class EditorViewModel : ViewModel() {
                     editorState = EditorState.Success(result)
                     isProcessing = false
                 }
+            } else {
+                // Cancel - restore the state from when we entered manual edit mode
+                val savedFg = savedForegroundBeforeManualEdit
+                val savedDisplay = savedDisplayBitmapBeforeManualEdit
+                val savedBg = savedBackgroundBeforeManualEdit
+
+                if (savedFg != null && savedDisplay != null && savedBg != null) {
+                    foregroundBitmap = savedFg
+                    editorState = EditorState.Success(savedDisplay)
+                    currentBackground = savedBg
+                }
             }
+
             isManualEditMode = false
             brushStrokes.clear()
+            editableMask = null
+
+            // Clear saved state
+            savedForegroundBeforeManualEdit = null
+            savedDisplayBitmapBeforeManualEdit = null
+            savedBackgroundBeforeManualEdit = null
         }
     }
 
-    // --- FIX IS HERE ---
     fun addBrushStroke(path: DrawingPath) {
         brushStrokes.add(path)
-        // Draw IMMEDIATELY. Do not wait for batching.
         applyPendingStrokes()
     }
 
-    fun applyStrokes() { applyPendingStrokes() }
-
     private fun applyPendingStrokes() {
         if (brushStrokes.isEmpty()) return
+        
+        // Make a copy of strokes to process
+        val strokesToApply = brushStrokes.toList()
+        
         viewModelScope.launch {
             val mask = editableMask ?: return@launch
             val orig = originalBitmap ?: return@launch
-            // NOTE: We don't set isProcessing=true here to keep the UI responsive during drawing
 
-            val updatedMask = manualEditingProcessor.applyBrushStrokes(mask, brushStrokes.toList(), mask.width, mask.height)
+            // Heavy bitmap processing on background thread
+            val (updatedMask, editedFg, result) = withContext(Dispatchers.Default) {
+                // Apply strokes to the mask
+                val newMask = manualEditingProcessor.applyBrushStrokes(
+                    mask, 
+                    strokesToApply, 
+                    mask.width, 
+                    mask.height
+                )
+
+                // Apply the new mask to the original image to get the new foreground
+                val newFg = manualEditingProcessor.applyEditedMask(orig, newMask)
+
+                // Compose final image for preview
+                val finalResult = imageProcessor.composeFinalImage(
+                    newFg, 
+                    currentBackground, 
+                    orig.width, 
+                    orig.height, 
+                    orig
+                )
+                
+                Triple(newMask, newFg, finalResult)
+            }
+            
+            // Update state on Main thread
             editableMask = updatedMask
-
-            val editedFg = manualEditingProcessor.applyEditedMask(orig, updatedMask)
-            val result = imageProcessor.composeFinalImage(editedFg, currentBackground, orig.width, orig.height, orig)
-
+            foregroundBitmap = editedFg
             editorState = EditorState.Success(result)
+            
+            // Clear only the strokes we just processed
             brushStrokes.clear()
         }
     }
 
     fun clearBrushStrokes() {
         viewModelScope.launch {
-            val fg = foregroundBitmap ?: return@launch
-            editableMask = manualEditingProcessor.createMaskFromForeground(fg)
+            // Clear means reset to the state when we entered manual edit mode
+            val savedFg = savedForegroundBeforeManualEdit
+            val savedDisplay = savedDisplayBitmapBeforeManualEdit
+
+            if (savedFg != null && savedDisplay != null) {
+                // Restore the saved foreground and display
+                foregroundBitmap = savedFg
+                editorState = EditorState.Success(savedDisplay)
+
+                // Recreate mask from the original foreground
+                editableMask = manualEditingProcessor.createMaskFromForeground(savedFg)
+            }
+
+            // Clear the strokes list
             brushStrokes.clear()
-            // trigger refresh...
+            
+            // Clear undo/redo since we're resetting
+            undoStack.clear()
+            redoStack.clear()
+            updateUndoRedoState()
         }
     }
+    
+    // Helper data class for Undo/Redo
+    data class UndoRedoState(val foregroundBitmap: Bitmap, val maskBitmap: Bitmap)
 
     fun updateBrushTool(mode: BrushMode?, size: Float?, hardness: Float?, opacity: Float?) {
         currentBrushTool = currentBrushTool.copy(
@@ -209,6 +381,30 @@ class EditorViewModel : ViewModel() {
         )
     }
 
-    fun smoothMask() { /* existing logic */ }
-    fun reset() { /* existing logic */ }
+    fun smoothMask() { 
+        saveToUndoStack()
+        viewModelScope.launch {
+            val mask = editableMask ?: return@launch
+            val orig = originalBitmap ?: return@launch
+            
+            // TODO: Implement actual smoothing logic in ManualEditingProcessor
+            // For now, we'll just pretend to update to trigger a refresh
+            val result = imageProcessor.composeFinalImage(foregroundBitmap!!, currentBackground, orig.width, orig.height, orig)
+            editorState = EditorState.Success(result)
+        }
+    }
+    
+    fun reset() {
+        viewModelScope.launch {
+            originalBitmap = null
+            foregroundBitmap = null
+            maskBitmap = null
+            editableMask = null
+            currentBackground = BackgroundType.Transparent
+            editorState = EditorState.Idle
+            undoStack.clear()
+            redoStack.clear()
+            updateUndoRedoState()
+        }
+    }
 }

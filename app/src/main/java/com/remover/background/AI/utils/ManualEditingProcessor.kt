@@ -36,33 +36,54 @@ class ManualEditingProcessor {
         if (points.isEmpty()) return
 
         val brush = path.brushTool
+        // Calculate the target alpha from the brush settings
+        val targetAlpha = (brush.opacity * 255).toInt()
+
         val paint = Paint().apply {
             isAntiAlias = true
             isDither = true
             style = Paint.Style.FILL
-            alpha = (brush.opacity * 255).toInt()
+            alpha = targetAlpha
 
-            // FIX: Restore must use null (SRC_OVER) to draw opaque white over transparent areas
             xfermode = when (brush.mode) {
+                // DST_OUT erases existing pixels (Transparent)
                 BrushMode.ERASE -> PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
+                // SRC_OVER (null) draws White pixels (Opaque)
                 BrushMode.RESTORE -> null
             }
         }
 
-        // Stepping Algorithm: Interpolate between points for smooth strokes
-        drawPoint(canvas, points[0], brush, paint, w, h)
+        // Pass targetAlpha to drawing functions so they can enforce it
+        drawPoint(canvas, points[0], brush, paint, w, h, targetAlpha)
         for (i in 1 until points.size) {
             val p1 = points[i - 1]
             val p2 = points[i]
-            drawSegment(canvas, p1, p2, brush, paint, w, h)
+            drawSegment(canvas, p1, p2, brush, paint, w, h, targetAlpha)
         }
     }
 
-    private fun drawPoint(canvas: Canvas, p: DrawingPoint, brush: BrushTool, paint: Paint, w: Int, h: Int) {
-        drawBrushCircle(canvas, p.x * w, p.y * h, brush.size * p.pressure, brush.hardness, paint)
+    private fun drawPoint(
+        canvas: Canvas,
+        p: DrawingPoint,
+        brush: BrushTool,
+        paint: Paint,
+        w: Int,
+        h: Int,
+        targetAlpha: Int
+    ) {
+        drawBrushCircle(canvas, p.x * w, p.y * h, brush.size * p.pressure, brush.hardness, paint, targetAlpha)
     }
 
-    private fun drawSegment(canvas: Canvas, p1: DrawingPoint, p2: DrawingPoint, brush: BrushTool, paint: Paint, w: Int, h: Int) {
+    private fun drawSegment(
+        canvas: Canvas,
+        p1: DrawingPoint,
+        p2: DrawingPoint,
+        brush: BrushTool,
+        paint: Paint,
+        w: Int,
+        h: Int,
+        targetAlpha: Int
+    ) {
         val startX = p1.x * w; val startY = p1.y * h
         val endX = p2.x * w; val endY = p2.y * h
         val distance = hypot(endX - startX, endY - startY)
@@ -78,29 +99,43 @@ class ManualEditingProcessor {
                 canvas,
                 startX + (endX - startX) * t,
                 startY + (endY - startY) * t,
-                brushSize, brush.hardness, paint
+                brushSize, brush.hardness, paint, targetAlpha
             )
         }
     }
 
-    private fun drawBrushCircle(canvas: Canvas, x: Float, y: Float, size: Float, hardness: Float, paint: Paint) {
-        // Gradient shader must be recreated at each position for correct "Softness"
+    private fun drawBrushCircle(
+        canvas: Canvas,
+        x: Float,
+        y: Float,
+        size: Float,
+        hardness: Float,
+        paint: Paint,
+        targetAlpha: Int
+    ) {
+        val radius = size / 2
+
         if (hardness < 1.0f) {
+            val centerStop = hardness.coerceIn(0.1f, 0.95f)
             paint.shader = RadialGradient(
-                x, y, size / 2,
-                intArrayOf(Color.WHITE, Color.TRANSPARENT),
-                floatArrayOf(hardness, 1.0f),
+                x, y, radius,
+                intArrayOf(Color.WHITE, Color.WHITE, Color.TRANSPARENT),
+                floatArrayOf(0f, centerStop, 1.0f),
                 Shader.TileMode.CLAMP
             )
-            paint.color = Color.WHITE
+            // DO NOT set paint.color here, or it will reset alpha!
+            // Just ensure alpha is set correctly.
+            paint.alpha = targetAlpha
         } else {
             paint.shader = null
-            paint.color = Color.WHITE
+            paint.color = Color.WHITE // This resets alpha to 255
+            paint.alpha = targetAlpha // FIX: Restore the correct alpha
         }
-        canvas.drawCircle(x, y, size / 2, paint)
+
+        canvas.drawCircle(x, y, radius, paint)
     }
 
-    // --- Helpers (Unchanged from original but required for compilation) ---
+    // --- Helpers ---
     suspend fun createMaskFromForeground(foregroundBitmap: Bitmap): Bitmap = withContext(Dispatchers.Default) {
         val width = foregroundBitmap.width; val height = foregroundBitmap.height
         val mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)

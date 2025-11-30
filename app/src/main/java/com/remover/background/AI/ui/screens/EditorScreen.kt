@@ -491,21 +491,36 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val isManual = viewModel.isManualEditMode
     var showBgPicker by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF121212))) {
+    // Main Container - Full Screen Dark Theme
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0A0A0A)) // Deep black background
+    ) {
 
-        // 1. FULLSCREEN CANVAS LAYER
-        if (editorState is EditorState.Success) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                // Checkerboard placeholder for transparency
-                Box(modifier = Modifier.fillMaxSize().background(Color(0xFF2A2A2A)))
+        // 1. IMAGE/CANVAS LAYER (Full Screen)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = if (isManual) 220.dp else 0.dp), // Push image up when manual mode is active
+            contentAlignment = Alignment.Center
+        ) {
+            if (editorState is EditorState.Success) {
+                // Checkerboard pattern for transparency
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF1A1A1A))
+                )
 
+                // The Image itself
                 if (isManual) {
                     DrawingCanvas(
                         bitmap = editorState.bitmap,
                         brushTool = viewModel.currentBrushTool,
                         isEnabled = !viewModel.isProcessing,
                         onDrawingPath = { viewModel.addBrushStroke(it) },
-                        modifier = Modifier.fillMaxSize() // Fullscreen!
+                        modifier = Modifier.fillMaxSize()
                     )
                 } else {
                     Image(
@@ -515,66 +530,144 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                         contentScale = ContentScale.Fit
                     )
                 }
+            } else if (viewModel.isProcessing) {
+                CircularProgressIndicator(
+                    color = Primary,
+                    modifier = Modifier.size(48.dp)
+                )
             }
         }
 
-        // 2. TOP FLOATING BAR
+        // 2. TOP BAR (Floating)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, start = 16.dp, end = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Back Button with Glassmorphism
             IconButton(
                 onClick = onBackClick,
-                modifier = Modifier.clip(CircleShape).background(Color.Black.copy(0.5f))
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .border(1.dp, Color.White.copy(0.1f), CircleShape)
             ) {
                 Icon(Icons.Default.ArrowBack, null, tint = Color.White)
             }
 
-            if (!isManual) {
-                Button(
-                    onClick = { viewModel.saveBitmap(android.graphics.Bitmap.CompressFormat.PNG) {
-                        Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show()
-                    }},
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                    shape = RoundedCornerShape(50)
+            if (isManual) {
+                // Undo/Redo Group
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(50))
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("Save")
-                }
-            }
-        }
-
-        // 3. BOTTOM FLOATING CONTROLS
-        if (editorState is EditorState.Success) {
-            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
-                if (isManual) {
-                    BrushControlPanel(
-                        brushTool = viewModel.currentBrushTool,
-                        onBrushToolChange = { viewModel.updateBrushTool(it.mode, it.size, it.hardness, it.opacity) },
-                        onClearStrokes = { viewModel.clearBrushStrokes() },
-                        onSmoothMask = { viewModel.smoothMask() },
-                        onApplyStrokes = { viewModel.applyStrokes() },
-                        onDone = { viewModel.exitManualEditMode(true) },
-                        onCancel = { viewModel.exitManualEditMode(false) }
-                    )
-                } else {
-                    // Main Menu
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
-                            .padding(bottom = 32.dp, top = 20.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                    IconButton(
+                        onClick = { viewModel.undo() },
+                        enabled = viewModel.canUndo
                     ) {
-                        EditBtn(Icons.Default.ColorLens, "Background") { showBgPicker = true }
-                        EditBtn(Icons.Default.Edit, "Manual Edit") { viewModel.enterManualEditMode() }
+                        Icon(
+                            Icons.Default.Undo,
+                            "Undo",
+                            tint = if (viewModel.canUndo) Color.White else Color.White.copy(0.3f)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(24.dp)
+                            .background(Color.White.copy(0.1f))
+                            .align(Alignment.CenterVertically)
+                    )
+                    IconButton(
+                        onClick = { viewModel.redo() },
+                        enabled = viewModel.canRedo
+                    ) {
+                        Icon(
+                            Icons.Default.Redo,
+                            "Redo",
+                            tint = if (viewModel.canRedo) Color.White else Color.White.copy(0.3f)
+                        )
                     }
                 }
+            } else {
+                // Save Button
+                Button(
+                    onClick = {
+                        viewModel.saveBitmap(Bitmap.CompressFormat.PNG) {
+                            Toast.makeText(context, "Image Saved to Gallery", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Primary,
+                        contentColor = Color.White
+                    ),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text("Save", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
 
-        if (viewModel.isProcessing) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.4f)), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Primary)
+        // 3. BOTTOM CONTROLS (Floating)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            if (editorState is EditorState.Success) {
+                if (isManual) {
+                    // Manual Edit Controls (Brush Panel)
+                    // We wrap it in a surface to ensure it stands out
+                    Surface(
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        BrushControlPanel(
+                            brushTool = viewModel.currentBrushTool,
+                            onBrushToolChange = { viewModel.updateBrushTool(it.mode, it.size, it.hardness, it.opacity) },
+                            onClearStrokes = { viewModel.clearBrushStrokes() },
+                            onSmoothMask = { viewModel.smoothMask() },
+                            onApplyStrokes = { viewModel.applyStrokes() },
+                            onDone = { viewModel.exitManualEditMode(true) },
+                            onCancel = { viewModel.exitManualEditMode(false) }
+                        )
+                    }
+                } else {
+                    // Main Menu (Floating Bar)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Color(0xFF1E1E1E).copy(alpha = 0.95f))
+                                .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(24.dp))
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(40.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            EditBtn(Icons.Default.ColorLens, "Background") { showBgPicker = true }
+                            Box(
+                                modifier = Modifier
+                                    .width(1.dp)
+                                    .height(32.dp)
+                                    .background(Color.White.copy(0.1f))
+                            )
+                            EditBtn(Icons.Default.Edit, "Manual Edit") { viewModel.enterManualEditMode() }
+                        }
+                    }
+                }
             }
         }
     }
