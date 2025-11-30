@@ -20,7 +20,7 @@ data class BrushTool(
     val opacity: Float = 1.0f       // Brush opacity (0-1)
 ) {
     companion object {
-        const val MIN_SIZE = 10f
+        const val MIN_SIZE = 3f
         const val MAX_SIZE = 200f
         const val MIN_HARDNESS = 0.1f
         const val MAX_HARDNESS = 1.0f

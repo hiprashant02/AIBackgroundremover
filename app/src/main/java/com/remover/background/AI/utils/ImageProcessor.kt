@@ -51,23 +51,19 @@ class ImageProcessor {
      * This produces the best quality results with enhanced rendering
      */
     suspend fun composeFinalImage(
-        foregroundBitmap: Bitmap,
+        foreground: Bitmap,
         background: BackgroundType,
         originalWidth: Int,
         originalHeight: Int,
-        originalBitmap: Bitmap? = null
+        originalBitmap: Bitmap? = null,
+        subjectX: Float = 0f,
+        subjectY: Float = 0f,
+        subjectScale: Float = 1f,
+        subjectRotation: Float = 0f
     ): Bitmap = withContext(Dispatchers.Default) {
-        // Create the canvas for the final result with ARGB_8888 for best quality
-        val outputBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(outputBitmap)
-
-        // High-quality paint settings
-        val paint = Paint().apply {
-            isAntiAlias = true
-            isFilterBitmap = true
-            isDither = true
-            isAntiAlias = true
-        }
+        val result = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(result)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
         // 1. Draw the selected background
         when (background) {
@@ -91,23 +87,29 @@ class ImageProcessor {
                     canvas.drawBitmap(originalBitmap, 0f, 0f, paint)
                 }
             }
+            is BackgroundType.CustomImage -> {
+                // Scale and draw custom image as background
+                val scaledBg = Bitmap.createScaledBitmap(background.bitmap, originalWidth, originalHeight, true)
+                canvas.drawBitmap(scaledBg, 0f, 0f, paint)
+                if (scaledBg != background.bitmap) {
+                    scaledBg.recycle()
+                }
+            }
         }
 
-        // 2. Draw the cut-out subject on top with high-quality scaling
-        val scaledForeground = if (foregroundBitmap.width != originalWidth || foregroundBitmap.height != originalHeight) {
-            // Use high-quality scaling
-            Bitmap.createScaledBitmap(foregroundBitmap, originalWidth, originalHeight, true)
-        } else {
-            foregroundBitmap
-        }
+        // 2. Draw the foreground with transform
+        val matrix = android.graphics.Matrix()
+        val cx = foreground.width / 2f
+        val cy = foreground.height / 2f
+        
+        // Scale and Rotate around the center of the image
+        matrix.postScale(subjectScale, subjectScale, cx, cy)
+        matrix.postRotate(subjectRotation, cx, cy)
+        matrix.postTranslate(subjectX, subjectY)
+        
+        canvas.drawBitmap(foreground, matrix, paint)
 
-        canvas.drawBitmap(scaledForeground, 0f, 0f, paint)
-
-        if (scaledForeground != foregroundBitmap) {
-            scaledForeground.recycle()
-        }
-
-        return@withContext outputBitmap
+        return@withContext result
     }
 
     /**
@@ -142,6 +144,13 @@ class ImageProcessor {
             is BackgroundType.Original -> {
                 canvas.drawBitmap(originalBitmap, 0f, 0f, null)
                 return@withContext outputBitmap
+            }
+            is BackgroundType.CustomImage -> {
+                val scaledBg = Bitmap.createScaledBitmap(background.bitmap, width, height, true)
+                canvas.drawBitmap(scaledBg, 0f, 0f, null)
+                if (scaledBg != background.bitmap) {
+                    scaledBg.recycle()
+                }
             }
         }
 

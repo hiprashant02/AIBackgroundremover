@@ -140,7 +140,7 @@ fun BrushControlPanel(
             )
         }
 
-        // 3. Active Slider
+        // 2. Active Slider
         AnimatedContent(targetState = activeProperty, label = "slider_anim") { property ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (property) {
@@ -148,7 +148,7 @@ fun BrushControlPanel(
                         AestheticSlider(
                             value = brushTool.size,
                             onValueChange = { onBrushToolChange(brushTool.copy(size = it)) },
-                            valueRange = 10f..200f
+                            valueRange = 3f..200f
                         )
                     }
                     BrushProperty.HARDNESS -> {
@@ -227,3 +227,4 @@ private fun AestheticSlider(
         modifier = Modifier.height(40.dp)
     )
 }
+

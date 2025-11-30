@@ -12,6 +12,7 @@ sealed class BackgroundType {
     ) : BackgroundType()
     data class Blur(val intensity: Float = 25f) : BackgroundType()
     object Original : BackgroundType()
+    data class CustomImage(val bitmap: android.graphics.Bitmap) : BackgroundType()
 }
 
 data class ProcessedImage(

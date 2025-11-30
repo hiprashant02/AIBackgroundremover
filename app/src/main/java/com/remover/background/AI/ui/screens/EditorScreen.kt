@@ -433,6 +433,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -448,10 +449,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.core.content.FileProvider
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.ui.components.BrushControlPanel
@@ -460,6 +469,81 @@ import com.remover.background.AI.ui.theme.*
 import com.remover.background.AI.viewmodel.EditorState
 import com.remover.background.AI.viewmodel.EditorViewModel
 
+
+@Composable
+fun ZoomableBox(
+    modifier: Modifier = Modifier,
+    enableZoom: Boolean = true,
+    content: @Composable BoxScope.() -> Unit
+) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clipToBounds() // Clip content to bounds so it doesn't overflow
+            .pointerInput(enableZoom) {
+                if (enableZoom) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val pressed = event.changes.filter { it.pressed }
+                            
+                            // Handle Zoom/Pan with 2+ fingers
+                            if (pressed.size >= 2) {
+                                val p1 = pressed[0]
+                                val p2 = pressed[1]
+                                
+                                if (p1.previousPressed && p2.previousPressed) {
+                                    val oldDist = (p1.previousPosition - p2.previousPosition).getDistance()
+                                    val newDist = (p1.position - p2.position).getDistance()
+                                    
+                                    // Zoom
+                                    if (oldDist > 10f) {
+                                        scale = (scale * (newDist / oldDist)).coerceIn(1f, 10f)
+                                    }
+                                    
+                                    // Pan
+                                    val pan = ((p1.position - p1.previousPosition) + (p2.position - p2.previousPosition)) / 2f
+                                    if (scale > 1f) {
+                                        offsetX += pan.x
+                                        offsetY += pan.y
+                                    }
+                                    
+                                    // Consume events
+                                    pressed.forEach { it.consume() }
+                                }
+                            }
+                            
+                            // Reset if zoomed out
+                            if (scale <= 1f) {
+                                scale = 1f
+                                offsetX = 0f
+                                offsetY = 0f
+                            }
+                        }
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offsetX,
+                    translationY = offsetY
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+}
 
 @Composable
 fun CheckerboardBackground(modifier: Modifier = Modifier) {
@@ -555,33 +639,64 @@ fun SaveDialog(
 @Composable
 fun BackgroundLayer(
     backgroundType: BackgroundType,
+    originalBitmap: android.graphics.Bitmap? = null,
     modifier: Modifier = Modifier
 ) {
-    when (backgroundType) {
-        is BackgroundType.Transparent -> {
-            // Show checkerboard for transparent
-            CheckerboardBackground(modifier = modifier)
-        }
-        is BackgroundType.SolidColor -> {
-            // Show solid color
-            Box(
-                modifier = modifier.background(backgroundType.color)
-            )
-        }
-        is BackgroundType.Gradient -> {
-            // Show gradient
-            Box(
-                modifier = modifier.background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(backgroundType.startColor, backgroundType.endColor),
-                        start = Offset.Zero,
-                        end = Offset.Infinite
-                    )
+    Box(modifier = modifier) {
+        when (backgroundType) {
+            is BackgroundType.Transparent -> {
+                CheckerboardBackground(modifier = Modifier.fillMaxSize())
+            }
+            is BackgroundType.SolidColor -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(backgroundType.color)
                 )
-            )
-        }
-        else -> {
-            
+            }
+            is BackgroundType.Gradient -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(backgroundType.startColor, backgroundType.endColor),
+                                start = Offset.Zero,
+                                end = Offset.Infinite
+                            )
+                        )
+                )
+            }
+            is BackgroundType.CustomImage -> {
+                Image(
+                    bitmap = backgroundType.bitmap.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            is BackgroundType.Original -> {
+                if (originalBitmap != null) {
+                    Image(
+                        bitmap = originalBitmap.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+            is BackgroundType.Blur -> {
+                if (originalBitmap != null) {
+                    // Note: Modifier.blur requires API 31+. For lower APIs, we might need a different approach.
+                    // For now, we show the original image.
+                    Image(
+                        bitmap = originalBitmap.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
     }
 }
@@ -592,6 +707,25 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val editorState = viewModel.editorState
     val isManual = viewModel.isManualEditMode
     var showBgPicker by remember { mutableStateOf(false) }
+    var isMoveMode by remember { mutableStateOf(false) }
+
+    val customImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    viewModel.applyBackground(BackgroundType.CustomImage(bitmap))
+                    showBgPicker = false
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -638,14 +772,45 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                             .padding(16.dp)
                     )
                 } else {
-                    Image(
-                        bitmap = editorState.bitmap.asImageBitmap(),
-                        contentDescription = null,
+                    ZoomableBox(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentScale = ContentScale.Fit
-                    )
+                        enableZoom = !isMoveMode
+                    ) {
+                        // Background
+                        BackgroundLayer(
+                            backgroundType = viewModel.currentBackground,
+                            originalBitmap = viewModel.originalBitmap,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        
+                        // Foreground (Subject)
+                        val fg = viewModel.foregroundBitmap
+                        if (fg != null) {
+                            Image(
+                                bitmap = fg.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer(
+                                        scaleX = viewModel.subjectScale,
+                                        scaleY = viewModel.subjectScale,
+                                        rotationZ = viewModel.subjectRotation,
+                                        translationX = viewModel.subjectPosition.x,
+                                        translationY = viewModel.subjectPosition.y
+                                    )
+                                    .pointerInput(isMoveMode) {
+                                        if (isMoveMode) {
+                                            detectTransformGestures { _, pan, zoom, rotation ->
+                                                viewModel.updateSubjectTransform(pan, zoom, rotation)
+                                            }
+                                        }
+                                    },
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
                 }
             } else if (viewModel.isProcessing) {
                 CircularProgressIndicator(
@@ -772,6 +937,18 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                         )
                         
                         EditorMenuItem(
+                            icon = Icons.Default.OpenWith,
+                            label = "Move",
+                            isSelected = isMoveMode,
+                            onClick = { 
+                                isMoveMode = !isMoveMode
+                                if (isMoveMode) {
+                                    Toast.makeText(context, "Drag to move, pinch to resize/rotate subject", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                        
+                        EditorMenuItem(
                             icon = Icons.Default.Delete,
                             label = "Erase",
                             onClick = {
@@ -798,6 +975,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
         BackgroundPickerSheet(
             currentBackground = viewModel.currentBackground,
             onBackgroundSelected = { viewModel.applyBackground(it); showBgPicker = false },
+            onPickCustomImage = { customImagePickerLauncher.launch("image/*") },
             onDismiss = { showBgPicker = false }
         )
     }
@@ -807,6 +985,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
 fun EditorMenuItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    isSelected: Boolean = false,
     isProcessing: Boolean = false,
     onClick: () -> Unit
 ) {
@@ -827,19 +1006,17 @@ fun EditorMenuItem(
             Icon(
                 icon,
                 contentDescription = label,
-                tint = Color.White,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.White,
                 modifier = Modifier.size(22.dp) // Reduced Icon Size
             )
         }
         
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(4.dp))
         
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.White.copy(0.8f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
+            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White
         )
     }
 }
@@ -933,8 +1110,11 @@ fun EditOption(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Str
 fun BackgroundPickerSheet(
     currentBackground: BackgroundType,
     onBackgroundSelected: (BackgroundType) -> Unit,
+    onPickCustomImage: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface
@@ -969,6 +1149,32 @@ fun BackgroundPickerSheet(
                         )
                         .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                 )
+            }
+
+            Spacer(Modifier.height(12.dp))
+            
+            // Custom Image Background
+            BackgroundOption(
+                title = "Custom Image",
+                subtitle = "Pick from gallery",
+                isSelected = currentBackground is BackgroundType.CustomImage,
+                onClick = onPickCustomImage
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF2A2A2A))
+                        .border(1.dp, Primary, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Image,
+                        null,
+                        tint = Primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))

@@ -32,14 +32,23 @@ fun DrawingCanvas(
     modifier: Modifier = Modifier
 ) {
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
-    var currentPath by remember { mutableStateOf(listOf<DrawingPoint>()) }
-    var isDrawing by remember { mutableStateOf(false) }
-    var cursorPosition by remember { mutableStateOf<Offset?>(null) }
 
     // Zoom and pan state
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+    var isDrawing by remember { mutableStateOf(false) }
+    var currentPath by remember { mutableStateOf(emptyList<DrawingPoint>()) }
+    var cursorPosition by remember { mutableStateOf<Offset?>(null) }
+
+    DisposableEffect(Unit) {
+        scale = 1f
+        offsetX = 0f
+        offsetY = 0f
+        isDrawing = false
+        currentPath = emptyList()
+        onDispose { }
+    }
 
     val imageAspectRatio = remember(bitmap) { bitmap.width.toFloat() / bitmap.height.toFloat() }
     val imageBounds = remember(canvasSize, imageAspectRatio) {
@@ -63,8 +72,8 @@ fun DrawingCanvas(
 
                             // Handling Multitouch (Zoom/Pan)
                             if (event.changes.size >= 2) {
-                                // Save current stroke before switching to zoom/pan
-                                if (isDrawing && currentPath.isNotEmpty()) {
+                                // Save current stroke only if it has multiple points (prevents dots)
+                                if (isDrawing && currentPath.size > 1) {
                                     onDrawingPath(DrawingPath(currentPath, brushTool))
                                 }
                                 isDrawing = false
@@ -110,6 +119,7 @@ fun DrawingCanvas(
                                         currentPath = currentPath + imagePos
                                         change.consume()
                                     } else if (!change.pressed && isDrawing) {
+                                        // Save all strokes including single taps
                                         if (currentPath.isNotEmpty()) {
                                             onDrawingPath(DrawingPath(currentPath, brushTool))
                                         }
@@ -118,8 +128,8 @@ fun DrawingCanvas(
                                         cursorPosition = null
                                     }
                                 } else {
-                                    // Touch outside image bounds - complete the current stroke if drawing
-                                    if (isDrawing && currentPath.isNotEmpty()) {
+                                    // Touch outside image bounds - only save multi-point strokes
+                                    if (isDrawing && currentPath.size > 1) {
                                         onDrawingPath(DrawingPath(currentPath, brushTool))
                                     }
                                     isDrawing = false
@@ -128,11 +138,12 @@ fun DrawingCanvas(
                                 }
                             } else {
                                 // No touches - complete any in-progress stroke
-                                if (isDrawing && currentPath.isNotEmpty()) {
+                                if (isDrawing && currentPath.size > 1) {
                                     onDrawingPath(DrawingPath(currentPath, brushTool))
                                     isDrawing = false
                                     currentPath = emptyList()
                                 }
+                                
                                 cursorPosition = null
                             }
                         }

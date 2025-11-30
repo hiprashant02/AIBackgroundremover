@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,7 +35,7 @@ sealed class EditorState {
     data class Error(val message: String) : EditorState()
 }
 
-data class UndoRedoState(val bitmap: Bitmap, val backgroundType: BackgroundType)
+data class UndoRedoState(val foregroundBitmap: Bitmap, val maskBitmap: Bitmap)
 
 class EditorViewModel : ViewModel() {
     // ... all existing properties ...
@@ -47,6 +48,14 @@ class EditorViewModel : ViewModel() {
     var maskBitmap by mutableStateOf<Bitmap?>(null)
         private set
     var currentBackground by mutableStateOf<BackgroundType>(BackgroundType.Transparent)
+        private set
+    
+    // Subject Transform State
+    var subjectScale by mutableStateOf(1f)
+        private set
+    var subjectPosition by mutableStateOf(Offset.Zero)
+        private set
+    var subjectRotation by mutableStateOf(0f)
         private set
 
     var isProcessing by mutableStateOf(false)
@@ -132,11 +141,26 @@ class EditorViewModel : ViewModel() {
             try {
                 val orig = originalBitmap ?: return@launch
                 val fg = foregroundBitmap ?: return@launch
-                val result = imageProcessor.composeFinalImage(fg, background, orig.width, orig.height, orig)
+                val result = imageProcessor.composeFinalImage(
+                fg, 
+                background, 
+                orig.width, 
+                orig.height, 
+                orig,
+                subjectPosition.x,
+                subjectPosition.y,
+                subjectScale,
+                subjectRotation
+            )
                 currentBackground = background
                 editorState = EditorState.Success(result)
             } finally { isProcessing = false }
         }
+    }
+
+    fun setCustomImageBackground(imageBitmap: Bitmap) {
+        val customBackground = BackgroundType.CustomImage(imageBitmap)
+        applyBackgroundToForeground(customBackground)
     }
 
     fun applyBackground(background: BackgroundType) { applyBackgroundToForeground(background) }
@@ -171,6 +195,12 @@ class EditorViewModel : ViewModel() {
         viewModelScope.launch {
             applyPendingStrokes()
         }
+    }
+
+    fun updateSubjectTransform(pan: Offset, zoom: Float, rotation: Float) {
+        subjectScale = (subjectScale * zoom).coerceIn(0.1f, 5f)
+        subjectPosition += pan
+        subjectRotation += rotation
     }
 
     // --- Undo / Redo Logic ---
@@ -231,7 +261,11 @@ class EditorViewModel : ViewModel() {
                 currentBackground, 
                 orig.width, 
                 orig.height, 
-                orig
+                orig,
+                subjectPosition.x,
+                subjectPosition.y,
+                subjectScale,
+                subjectRotation
             )
             editorState = EditorState.Success(result)
         }
@@ -254,6 +288,25 @@ class EditorViewModel : ViewModel() {
             // Create a fresh mask from the current foreground
             editableMask = manualEditingProcessor.createMaskFromForeground(fg)
             currentBrushTool = currentBrushTool.copy(size = manualEditingProcessor.calculateOptimalBrushSize(fg.width, fg.height))
+            
+            // Force update of editorState.bitmap with current transform
+            // This ensures the DrawingCanvas shows the subject in the correct (moved) position
+            val orig = originalBitmap
+            if (orig != null) {
+                 val result = imageProcessor.composeFinalImage(
+                    fg,
+                    currentBackground,
+                    orig.width,
+                    orig.height,
+                    orig,
+                    subjectPosition.x,
+                    subjectPosition.y,
+                    subjectScale,
+                    subjectRotation
+                )
+                editorState = EditorState.Success(result)
+            }
+
             isManualEditMode = true
             
             // Clear stacks when entering new edit session to avoid state confusion
@@ -276,7 +329,17 @@ class EditorViewModel : ViewModel() {
                     isProcessing = true
                     val editedFg = manualEditingProcessor.applyEditedMask(orig, mask)
                     foregroundBitmap = editedFg
-                    val result = imageProcessor.composeFinalImage(editedFg, currentBackground, orig.width, orig.height, orig)
+                    val result = imageProcessor.composeFinalImage(
+                    editedFg, 
+                    currentBackground, 
+                    orig.width, 
+                    orig.height, 
+                    orig,
+                    subjectPosition.x,
+                    subjectPosition.y,
+                    subjectScale,
+                    subjectRotation
+                )
                     editorState = EditorState.Success(result)
                     isProcessing = false
                 }
@@ -306,8 +369,48 @@ class EditorViewModel : ViewModel() {
 
     fun addBrushStroke(path: DrawingPath) {
         viewModelScope.launch {
+            // Transform path if subject is moved/scaled/rotated
+            val transformedPath = if (subjectScale != 1f || subjectPosition != Offset.Zero || subjectRotation != 0f) {
+                val fg = foregroundBitmap
+                if (fg != null) {
+                    val width = fg.width.toFloat()
+                    val height = fg.height.toFloat()
+                    val cx = width / 2f
+                    val cy = height / 2f
+                    
+                    // Precompute rotation math
+                    val rad = Math.toRadians(-subjectRotation.toDouble())
+                    val cos = Math.cos(rad)
+                    val sin = Math.sin(rad)
+
+                    val newPoints = path.points.map { point ->
+                        // 0. Denormalize (Normalized -> Pixels)
+                        val px = point.x * width
+                        val py = point.y * height
+
+                        // 1. Untranslate
+                        val tx = px - subjectPosition.x
+                        val ty = py - subjectPosition.y
+                        
+                        // 2. Unrotate around (cx, cy)
+                        val dx = tx - cx
+                        val dy = ty - cy
+                        val rx = cx + (dx * cos - dy * sin).toFloat()
+                        val ry = cy + (dx * sin + dy * cos).toFloat()
+                        
+                        // 3. Unscale around center
+                        val sx = cx + (rx - cx) / subjectScale
+                        val sy = cy + (ry - cy) / subjectScale
+                        
+                        // 4. Renormalize (Pixels -> Normalized)
+                        point.copy(x = sx / width, y = sy / height)
+                    }
+                    path.copy(points = newPoints)
+                } else path
+            } else path
+
             // Add the stroke
-            brushStrokes.add(path)
+            brushStrokes.add(transformedPath)
             
             // Apply and WAIT for it to complete before allowing next stroke
             applyPendingStrokes()
@@ -319,8 +422,12 @@ class EditorViewModel : ViewModel() {
         strokeMutex.withLock {
             if (brushStrokes.isEmpty()) return@withLock
             
+            // Save current state to undo stack BEFORE applying changes
+            saveToUndoStack()
+            
             // Make a copy of strokes to process
             val strokesToApply = brushStrokes.toList()
+            brushStrokes.clear() // Clear immediately to avoid race conditions with new strokes
             
             val mask = editableMask ?: return@withLock
             val orig = originalBitmap ?: return@withLock
@@ -344,7 +451,11 @@ class EditorViewModel : ViewModel() {
                     currentBackground, 
                     orig.width, 
                     orig.height, 
-                    orig
+                    orig,
+                    subjectPosition.x,
+                    subjectPosition.y,
+                    subjectScale,
+                    subjectRotation
                 )
                 
                 Triple(newMask, newFg, finalResult)
@@ -354,9 +465,6 @@ class EditorViewModel : ViewModel() {
             editableMask = updatedMask
             foregroundBitmap = editedFg
             editorState = EditorState.Success(result)
-            
-            // Clear only the strokes we just processed
-            brushStrokes.clear()
         }
     }
 
@@ -385,9 +493,6 @@ class EditorViewModel : ViewModel() {
         }
     }
     
-    // Helper data class for Undo/Redo
-    data class UndoRedoState(val foregroundBitmap: Bitmap, val maskBitmap: Bitmap)
-
     fun updateBrushTool(mode: BrushMode?, size: Float?, hardness: Float?, opacity: Float?) {
         currentBrushTool = currentBrushTool.copy(
             mode = mode ?: currentBrushTool.mode,
@@ -405,7 +510,17 @@ class EditorViewModel : ViewModel() {
             
             // TODO: Implement actual smoothing logic in ManualEditingProcessor
             // For now, we'll just pretend to update to trigger a refresh
-            val result = imageProcessor.composeFinalImage(foregroundBitmap!!, currentBackground, orig.width, orig.height, orig)
+            val result = imageProcessor.composeFinalImage(
+                foregroundBitmap!!, 
+                currentBackground, 
+                orig.width, 
+                orig.height, 
+                orig,
+                subjectPosition.x,
+                subjectPosition.y,
+                subjectScale,
+                subjectRotation
+            )
             editorState = EditorState.Success(result)
         }
     }

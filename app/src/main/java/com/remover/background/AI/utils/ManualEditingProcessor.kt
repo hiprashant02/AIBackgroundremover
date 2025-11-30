@@ -123,13 +123,11 @@ class ManualEditingProcessor {
                 floatArrayOf(0f, centerStop, 1.0f),
                 Shader.TileMode.CLAMP
             )
-            // DO NOT set paint.color here, or it will reset alpha!
-            // Just ensure alpha is set correctly.
             paint.alpha = targetAlpha
         } else {
             paint.shader = null
-            paint.color = Color.WHITE // This resets alpha to 255
-            paint.alpha = targetAlpha // FIX: Restore the correct alpha
+            paint.color = Color.WHITE
+            paint.alpha = targetAlpha
         }
 
         canvas.drawCircle(x, y, radius, paint)
