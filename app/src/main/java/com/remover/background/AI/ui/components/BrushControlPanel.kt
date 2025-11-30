@@ -49,7 +49,7 @@ fun BrushControlPanel(
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .navigationBarsPadding() // Respect gesture bar
     ) {
-        // 1. Top Row: Mode Toggle & Action Buttons
+        // 1. Top Row: Mode Indicator & Action Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,53 +62,41 @@ fun BrushControlPanel(
                 Icon(Icons.Default.Close, "Cancel", tint = Color.White)
             }
 
-            // Mode Toggle (Erase / Restore)
+            // Mode Indicator (Shows current mode, not toggleable)
             Row(
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(36.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(Color(0xFF1E1E1E))
-                    .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(50))
-                    .padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(
+                        if (brushTool.mode == BrushMode.ERASE) 
+                            Color(0xFFEF5350).copy(alpha = 0.2f)
+                        else 
+                            Color(0xFF66BB6A).copy(alpha = 0.2f)
+                    )
+                    .border(
+                        1.dp, 
+                        if (brushTool.mode == BrushMode.ERASE) 
+                            Color(0xFFEF5350) 
+                        else 
+                            Color(0xFF66BB6A), 
+                        RoundedCornerShape(50)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val isErase = brushTool.mode == BrushMode.ERASE
-                
-                // Erase Tab
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(50))
-                        .background(if (isErase) Color(0xFFEF5350) else Color.Transparent)
-                        .clickable { onBrushToolChange(brushTool.copy(mode = BrushMode.ERASE)) }
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Erase",
-                        color = Color.White,
-                        fontWeight = if (isErase) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-
-                // Restore Tab
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(50))
-                        .background(if (!isErase) Color(0xFF66BB6A) else Color.Transparent)
-                        .clickable { onBrushToolChange(brushTool.copy(mode = BrushMode.RESTORE)) }
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Restore",
-                        color = Color.White,
-                        fontWeight = if (!isErase) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
+                Icon(
+                    if (brushTool.mode == BrushMode.ERASE) Icons.Default.Delete else Icons.Default.Brush,
+                    contentDescription = null,
+                    tint = if (brushTool.mode == BrushMode.ERASE) Color(0xFFEF5350) else Color(0xFF66BB6A),
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    if (brushTool.mode == BrushMode.ERASE) "Erase Mode" else "Restore Mode",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
 
             // Done Button

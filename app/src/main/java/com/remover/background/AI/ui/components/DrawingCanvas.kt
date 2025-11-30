@@ -63,6 +63,10 @@ fun DrawingCanvas(
 
                             // Handling Multitouch (Zoom/Pan)
                             if (event.changes.size >= 2) {
+                                // Save current stroke before switching to zoom/pan
+                                if (isDrawing && currentPath.isNotEmpty()) {
+                                    onDrawingPath(DrawingPath(currentPath, brushTool))
+                                }
                                 isDrawing = false
                                 currentPath = emptyList()
 
@@ -114,14 +118,21 @@ fun DrawingCanvas(
                                         cursorPosition = null
                                     }
                                 } else {
-                                    // Touch outside image bounds
-                                    if (isDrawing) {
-                                        isDrawing = false
-                                        currentPath = emptyList()
-                                        cursorPosition = null
+                                    // Touch outside image bounds - complete the current stroke if drawing
+                                    if (isDrawing && currentPath.isNotEmpty()) {
+                                        onDrawingPath(DrawingPath(currentPath, brushTool))
                                     }
+                                    isDrawing = false
+                                    currentPath = emptyList()
+                                    cursorPosition = null
                                 }
                             } else {
+                                // No touches - complete any in-progress stroke
+                                if (isDrawing && currentPath.isNotEmpty()) {
+                                    onDrawingPath(DrawingPath(currentPath, brushTool))
+                                    isDrawing = false
+                                    currentPath = emptyList()
+                                }
                                 cursorPosition = null
                             }
                         }

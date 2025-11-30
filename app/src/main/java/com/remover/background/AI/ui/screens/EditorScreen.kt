@@ -419,13 +419,16 @@ package com.remover.background.AI.ui.screens
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -435,19 +438,85 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import com.remover.background.AI.model.BackgroundType
+import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.ui.components.BrushControlPanel
 import com.remover.background.AI.ui.components.DrawingCanvas
 import com.remover.background.AI.ui.theme.*
 import com.remover.background.AI.viewmodel.EditorState
 import com.remover.background.AI.viewmodel.EditorViewModel
+
+
+@Composable
+fun CheckerboardBackground(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val squareSize = 20.dp.toPx()
+        val numCols = (size.width / squareSize).toInt() + 1
+        val numRows = (size.height / squareSize).toInt() + 1
+        
+        for (row in 0..numRows) {
+            for (col in 0..numCols) {
+                val isLightSquare = (row + col) % 2 == 0
+                drawRect(
+                    color = if (isLightSquare) Color(0xFF2A2A2A) else Color(0xFF1A1A1A),
+                    topLeft = Offset(col * squareSize, row * squareSize),
+                    size = Size(squareSize, squareSize)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ImageWithCheckerboard(
+    bitmap: android.graphics.Bitmap,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit
+) {
+    BoxWithConstraints(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        val imageAspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
+        val containerAspectRatio = maxWidth / maxHeight
+        
+        // Calculate the actual size the image will occupy with ContentScale.Fit
+        val (imageWidth, imageHeight) = if (imageAspectRatio > containerAspectRatio) {
+            // Image is wider - width fills, height scales
+            maxWidth to (maxWidth / imageAspectRatio)
+        } else {
+            // Image is taller - height fills, width scales
+            (maxHeight * imageAspectRatio) to maxHeight
+        }
+        
+        // Checkerboard only in the exact image area
+        CheckerboardBackground(
+            modifier = Modifier.size(imageWidth, imageHeight)
+        )
+        
+        // Image on top
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = contentScale
+        )
+    }
+}
 
 @Composable
 fun SaveDialog(
@@ -483,6 +552,39 @@ fun SaveDialog(
     )
 }
 
+@Composable
+fun BackgroundLayer(
+    backgroundType: BackgroundType,
+    modifier: Modifier = Modifier
+) {
+    when (backgroundType) {
+        is BackgroundType.Transparent -> {
+            // Show checkerboard for transparent
+            CheckerboardBackground(modifier = modifier)
+        }
+        is BackgroundType.SolidColor -> {
+            // Show solid color
+            Box(
+                modifier = modifier.background(backgroundType.color)
+            )
+        }
+        is BackgroundType.Gradient -> {
+            // Show gradient
+            Box(
+                modifier = modifier.background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(backgroundType.startColor, backgroundType.endColor),
+                        start = Offset.Zero,
+                        end = Offset.Infinite
+                    )
+                )
+            )
+        }
+        else -> {
+            
+        }
+    }
+}
 
 @Composable
 fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
@@ -491,42 +593,57 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val isManual = viewModel.isManualEditMode
     var showBgPicker by remember { mutableStateOf(false) }
 
-    // Main Container - Full Screen Dark Theme
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0A)) // Deep black background
+            .background(Color(0xFF0A0A0A))
     ) {
-
         // 1. IMAGE/CANVAS LAYER (Full Screen)
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (isManual) 220.dp else 0.dp), // Push image up when manual mode is active
+                .padding(top = 110.dp) // Avoid Top Bar overlap
+                .padding(bottom = if (isManual) 280.dp else 130.dp), // Reduced padding for slimmer menu
             contentAlignment = Alignment.Center
         ) {
             if (editorState is EditorState.Success) {
-                // Checkerboard pattern for transparency
+                // Container with solid pure black background
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF1A1A1A))
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            clip = false
+                        )
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black) // Pure black - no checkerboard possible
+                        .border(
+                            width = 2.dp,
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 )
 
-                // The Image itself
+
+                // Display the image - background including checkerboard is already composited into bitmap
                 if (isManual) {
                     DrawingCanvas(
                         bitmap = editorState.bitmap,
                         brushTool = viewModel.currentBrushTool,
                         isEnabled = !viewModel.isProcessing,
                         onDrawingPath = { viewModel.addBrushStroke(it) },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
                     )
                 } else {
                     Image(
                         bitmap = editorState.bitmap.asImageBitmap(),
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
@@ -547,7 +664,6 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button with Glassmorphism
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier
@@ -597,7 +713,6 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                     }
                 }
             } else {
-                // Save Button
                 Button(
                     onClick = {
                         viewModel.saveBitmap(Bitmap.CompressFormat.PNG) {
@@ -621,51 +736,58 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp)
         ) {
-            if (editorState is EditorState.Success) {
-                if (isManual) {
-                    // Manual Edit Controls (Brush Panel)
-                    // We wrap it in a surface to ensure it stands out
-                    Surface(
-                        color = Color.Transparent,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        BrushControlPanel(
-                            brushTool = viewModel.currentBrushTool,
-                            onBrushToolChange = { viewModel.updateBrushTool(it.mode, it.size, it.hardness, it.opacity) },
-                            onClearStrokes = { viewModel.clearBrushStrokes() },
-                            onSmoothMask = { viewModel.smoothMask() },
-                            onApplyStrokes = { viewModel.applyStrokes() },
-                            onDone = { viewModel.exitManualEditMode(true) },
-                            onCancel = { viewModel.exitManualEditMode(false) }
-                        )
-                    }
-                } else {
-                    // Main Menu (Floating Bar)
-                    Box(
+            if (isManual) {
+                // Manual Edit Controls
+                BrushControlPanel(
+                    brushTool = viewModel.currentBrushTool,
+                    onBrushToolChange = { viewModel.updateBrushTool(it.mode, it.size, it.hardness, it.opacity) },
+                    onClearStrokes = { viewModel.clearBrushStrokes() },
+                    onSmoothMask = { viewModel.smoothMask() },
+                    onApplyStrokes = { viewModel.applyStrokes() },
+                    onDone = { viewModel.exitManualEditMode(true) },
+                    onCancel = { viewModel.exitManualEditMode(false) }
+                )
+            } else {
+                // Main Menu - Clean Transparent Row (Reverted & Refined)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
-                        contentAlignment = Alignment.Center
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(Color(0xFF1E1E1E).copy(alpha = 0.95f))
-                                .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(24.dp))
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(40.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            EditBtn(Icons.Default.ColorLens, "Background") { showBgPicker = true }
-                            Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .height(32.dp)
-                                    .background(Color.White.copy(0.1f))
-                            )
-                            EditBtn(Icons.Default.Edit, "Manual Edit") { viewModel.enterManualEditMode() }
-                        }
+                        EditorMenuItem(
+                            icon = Icons.Default.ColorLens,
+                            label = "Background",
+                            onClick = { showBgPicker = true }
+                        )
+                        
+                        EditorMenuItem(
+                            icon = Icons.Default.Delete,
+                            label = "Erase",
+                            onClick = {
+                                viewModel.updateBrushTool(mode = BrushMode.ERASE, null, null, null)
+                                viewModel.enterManualEditMode()
+                            }
+                        )
+                        
+                        EditorMenuItem(
+                            icon = Icons.Default.Brush,
+                            label = "Restore",
+                            onClick = {
+                                viewModel.updateBrushTool(mode = BrushMode.RESTORE, null, null, null)
+                                viewModel.enterManualEditMode()
+                            }
+                        )
                     }
                 }
             }
@@ -679,6 +801,102 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             onDismiss = { showBgPicker = false }
         )
     }
+}
+
+@Composable
+fun EditorMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    isProcessing: Boolean = false,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(enabled = !isProcessing, onClick = onClick)
+            .padding(12.dp) // Comfortable touch area
+    ) {
+        if (isProcessing) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(22.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(22.dp) // Reduced Icon Size
+            )
+        }
+        
+        Spacer(Modifier.height(6.dp))
+        
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(0.8f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+
+@Composable
+fun CompactEditBtn(
+    icon: androidx.compose.ui.graphics.vector.ImageVector, 
+    text: String, 
+    isProcessing: Boolean = false,
+    onClick: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(enabled = !isProcessing, onClick = onClick)
+            .background(Color.White.copy(if (isProcessing) 0.05f else 0.08f))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier.size(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Primary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    icon, 
+                    contentDescription = null, 
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Text(
+            text, 
+            color = Color.White.copy(if (isProcessing) 0.5f else 1f),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun VerticalDivider() {
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(24.dp)
+            .background(Color.White.copy(0.15f))
+    )
 }
 
 @Composable

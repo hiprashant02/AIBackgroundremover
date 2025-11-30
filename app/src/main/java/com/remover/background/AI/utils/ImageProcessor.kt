@@ -72,7 +72,8 @@ class ImageProcessor {
         // 1. Draw the selected background
         when (background) {
             is BackgroundType.Transparent -> {
-                // Transparent background - do nothing
+                // Draw checkerboard pattern for transparent background
+                drawCheckerboard(canvas, originalWidth, originalHeight)
             }
             is BackgroundType.SolidColor -> {
                 canvas.drawColor(background.color.toArgb())
@@ -213,6 +214,33 @@ class ImageProcessor {
         }
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
+
+    private fun drawCheckerboard(canvas: Canvas, width: Int, height: Int) {
+        val squareSize = 40 // 40 pixels for checkerboard squares
+        val lightColor = Color.rgb(42, 42, 42) // 0xFF2A2A2A
+        val darkColor = Color.rgb(26, 26, 26)  // 0xFF1A1A1A
+        
+        val paint = Paint()
+        
+        val numCols = (width / squareSize) + 1
+        val numRows = (height / squareSize) + 1
+        
+        for (row in 0..numRows) {
+            for (col in 0..numCols) {
+                val isLightSquare = (row + col) % 2 == 0
+                paint.color = if (isLightSquare) lightColor else darkColor
+                
+                canvas.drawRect(
+                    (col * squareSize).toFloat(),
+                    (row * squareSize).toFloat(),
+                    ((col + 1) * squareSize).toFloat(),
+                    ((row + 1) * squareSize).toFloat(),
+                    paint
+                )
+            }
+        }
+    }
+
 
     private fun drawBlurredBackground(canvas: Canvas, originalBitmap: Bitmap, intensity: Float) {
         // Create a blurred version of the original

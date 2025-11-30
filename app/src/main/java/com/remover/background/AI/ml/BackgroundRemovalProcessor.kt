@@ -20,9 +20,10 @@ class BackgroundRemovalProcessor(context: Context) {
         .build()
 
     private val segmenter = SubjectSegmentation.getClient(options)
+    private val refinementProcessor = MaskRefinementProcessor()
 
     /**
-     * Removes background using ML Kit's foreground bitmap (RECOMMENDED)
+     * Removes background using ML Kit's foreground bitmap (FAST MODE)
      * This is the most accurate method as ML Kit does the heavy lifting
      */
     suspend fun removeBackground(bitmap: Bitmap): Result<Bitmap> = withContext(Dispatchers.Default) {
@@ -40,6 +41,71 @@ class BackgroundRemovalProcessor(context: Context) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Removes background with ADVANCED POST-PROCESSING (HIGH QUALITY MODE)
+     * Uses MLKit + refinement pipeline for professional-grade results
+     */
+    suspend fun removeBackgroundWithRefinement(
+        bitmap: Bitmap,
+        quality: MaskQuality = MaskQuality.BALANCED,
+        refinementConfig: RefinementConfig = RefinementConfig()
+    ): Result<Bitmap> = withContext(Dispatchers.Default) {
+        return@withContext try {
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
+            val result = segmenter.process(inputImage).await()
+
+            val confidenceMask = result.foregroundConfidenceMask
+
+            if (confidenceMask != null) {
+                // Step 1: Create initial mask from MLKit
+                val initialMask = when (quality) {
+                    MaskQuality.HIGH_PRECISION -> createHighPrecisionMask(confidenceMask, bitmap.width, bitmap.height)
+                    MaskQuality.BALANCED -> createBalancedMask(confidenceMask, bitmap.width, bitmap.height)
+                    MaskQuality.SOFT_EDGES -> createSoftEdgeMask(confidenceMask, bitmap.width, bitmap.height)
+                    MaskQuality.AGGRESSIVE -> createAggressiveMask(confidenceMask, bitmap.width, bitmap.height)
+                }
+
+                // Step 2: Apply advanced refinement
+                val refinedMask = refinementProcessor.refineMask(initialMask, bitmap, refinementConfig)
+
+                // Step 3: Apply refined mask to original image
+                val foreground = applyMaskToImage(bitmap, refinedMask)
+
+                Result.success(foreground)
+            } else {
+                Result.failure(Exception("Failed to get confidence mask"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Apply alpha mask to original image to create foreground
+     */
+    private fun applyMaskToImage(original: Bitmap, mask: Bitmap): Bitmap {
+        val width = original.width
+        val height = original.height
+        val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        val originalPixels = IntArray(width * height)
+        val maskPixels = IntArray(width * height)
+        original.getPixels(originalPixels, 0, width, 0, 0, width, height)
+        mask.getPixels(maskPixels, 0, width, 0, 0, width, height)
+
+        val output = IntArray(width * height)
+        for (i in 0 until width * height) {
+            val alpha = Color.alpha(maskPixels[i])
+            val r = Color.red(originalPixels[i])
+            val g = Color.green(originalPixels[i])
+            val b = Color.blue(originalPixels[i])
+            output[i] = Color.argb(alpha, r, g, b)
+        }
+
+        result.setPixels(output, 0, width, 0, 0, width, height)
+        return result
     }
 
     /**

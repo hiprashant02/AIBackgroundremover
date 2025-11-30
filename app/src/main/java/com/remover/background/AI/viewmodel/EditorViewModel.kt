@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.remover.background.AI.ml.BackgroundRemovalProcessor
-import com.remover.background.AI.ml.MaskQuality
+
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.model.BrushTool
@@ -21,6 +21,8 @@ import com.remover.background.AI.utils.ImageProcessor
 import com.remover.background.AI.utils.ManualEditingProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 
@@ -46,8 +48,7 @@ class EditorViewModel : ViewModel() {
         private set
     var currentBackground by mutableStateOf<BackgroundType>(BackgroundType.Transparent)
         private set
-    var currentMaskQuality by mutableStateOf<MaskQuality>(MaskQuality.BALANCED)
-        private set
+
     var isProcessing by mutableStateOf(false)
         private set
     var isSaving by mutableStateOf(false)
@@ -71,11 +72,13 @@ class EditorViewModel : ViewModel() {
     var editableMask by mutableStateOf<Bitmap?>(null)
         private set
     private val brushStrokes = mutableListOf<DrawingPath>()
+    private val strokeMutex = Mutex() // Ensure strokes are processed sequentially
 
     // State to restore when canceling manual edit mode
     private var savedForegroundBeforeManualEdit: Bitmap? = null
     private var savedDisplayBitmapBeforeManualEdit: Bitmap? = null
     private var savedBackgroundBeforeManualEdit: BackgroundType? = null
+
 
     // ... Standard Initialization and Load Logic (Unchanged) ...
     fun initialize(context: Context) {
@@ -111,6 +114,7 @@ class EditorViewModel : ViewModel() {
 
     private suspend fun processBackground(bitmap: Bitmap) {
         try {
+            // Use fast MLKit by default for instant results
             val result = processor?.removeBackground(bitmap)
             if (result?.isSuccess == true) {
                 foregroundBitmap = result.getOrNull()
@@ -137,6 +141,8 @@ class EditorViewModel : ViewModel() {
 
     fun applyBackground(background: BackgroundType) { applyBackgroundToForeground(background) }
     
+
+    
     fun saveBitmap(format: Bitmap.CompressFormat, onComplete: (Result<Uri>) -> Unit) {
         viewModelScope.launch {
             isSaving = true
@@ -161,7 +167,11 @@ class EditorViewModel : ViewModel() {
         }
     }
     
-    fun applyStrokes() { applyPendingStrokes() }
+    fun applyStrokes() { 
+        viewModelScope.launch {
+            applyPendingStrokes()
+        }
+    }
 
     // --- Undo / Redo Logic ---
     private fun saveToUndoStack() {
@@ -295,19 +305,25 @@ class EditorViewModel : ViewModel() {
     }
 
     fun addBrushStroke(path: DrawingPath) {
-        brushStrokes.add(path)
-        applyPendingStrokes()
+        viewModelScope.launch {
+            // Add the stroke
+            brushStrokes.add(path)
+            
+            // Apply and WAIT for it to complete before allowing next stroke
+            applyPendingStrokes()
+        }
     }
 
-    private fun applyPendingStrokes() {
-        if (brushStrokes.isEmpty()) return
-        
-        // Make a copy of strokes to process
-        val strokesToApply = brushStrokes.toList()
-        
-        viewModelScope.launch {
-            val mask = editableMask ?: return@launch
-            val orig = originalBitmap ?: return@launch
+    private suspend fun applyPendingStrokes() {
+        // Use mutex to ensure strokes are processed sequentially, not skipped
+        strokeMutex.withLock {
+            if (brushStrokes.isEmpty()) return@withLock
+            
+            // Make a copy of strokes to process
+            val strokesToApply = brushStrokes.toList()
+            
+            val mask = editableMask ?: return@withLock
+            val orig = originalBitmap ?: return@withLock
 
             // Heavy bitmap processing on background thread
             val (updatedMask, editedFg, result) = withContext(Dispatchers.Default) {
