@@ -1,419 +1,3 @@
-//package com.remover.background.AI.ui.screens
-//
-//import android.graphics.Bitmap
-//import android.widget.Toast
-//import androidx.compose.animation.*
-//import androidx.compose.animation.core.*
-//import androidx.compose.foundation.Image
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.border
-//import androidx.compose.foundation.clickable
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.lazy.LazyRow
-//import androidx.compose.foundation.lazy.items
-//import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.*
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.draw.clip
-//import androidx.compose.ui.graphics.Brush
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.asImageBitmap
-//import androidx.compose.ui.layout.ContentScale
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.unit.dp
-//import com.remover.background.AI.model.BackgroundType
-//import com.remover.background.AI.model.BrushMode
-//import com.remover.background.AI.ui.components.BrushControlPanel
-//import com.remover.background.AI.ui.components.DrawingCanvas
-//import com.remover.background.AI.ui.theme.*
-//import com.remover.background.AI.viewmodel.EditorState
-//import com.remover.background.AI.viewmodel.EditorViewModel
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun EditorScreen(
-//    viewModel: EditorViewModel,
-//    onBackClick: () -> Unit
-//) {
-//    val context = LocalContext.current
-//    val editorState = viewModel.editorState
-//    val isProcessing = viewModel.isProcessing
-//    val isSaving = viewModel.isSaving
-//    val currentBackground = viewModel.currentBackground
-//    val canUndo = viewModel.canUndo
-//    val canRedo = viewModel.canRedo
-//    val isManualEditMode = viewModel.isManualEditMode
-//    val currentBrushTool = viewModel.currentBrushTool
-//
-//    var showBackgroundPicker by remember { mutableStateOf(false) }
-//    var showSaveDialog by remember { mutableStateOf(false) }
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        "Edit Image",
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                },
-//                navigationIcon = {
-//                    IconButton(onClick = onBackClick) {
-//                        Icon(Icons.Default.ArrowBack, "Back")
-//                    }
-//                },
-//                actions = {
-//                    // Undo
-//                    IconButton(
-//                        onClick = { viewModel.undo() },
-//                        enabled = canUndo && !isProcessing
-//                    ) {
-//                        Icon(
-//                            Icons.Default.Undo,
-//                            "Undo",
-//                            tint = if (canUndo && !isProcessing)
-//                                MaterialTheme.colorScheme.onSurface
-//                            else
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                        )
-//                    }
-//
-//                    // Redo
-//                    IconButton(
-//                        onClick = { viewModel.redo() },
-//                        enabled = canRedo && !isProcessing
-//                    ) {
-//                        Icon(
-//                            Icons.Default.Redo,
-//                            "Redo",
-//                            tint = if (canRedo && !isProcessing)
-//                                MaterialTheme.colorScheme.onSurface
-//                            else
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                        )
-//                    }
-//
-//                    // Manual Edit
-//                    IconButton(
-//                        onClick = {
-//                            if (isManualEditMode) {
-//                                viewModel.exitManualEditMode(applyChanges = true)
-//                            } else {
-//                                viewModel.enterManualEditMode()
-//                            }
-//                        },
-//                        enabled = editorState is EditorState.Success && !isProcessing
-//                    ) {
-//                        Icon(
-//                            if (isManualEditMode) Icons.Default.Check else Icons.Default.Edit,
-//                            if (isManualEditMode) "Apply Edits" else "Manual Edit",
-//                            tint = if (editorState is EditorState.Success && !isProcessing) {
-//                                if (isManualEditMode) Color.Green else MaterialTheme.colorScheme.onSurface
-//                            } else {
-//                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                            }
-//                        )
-//                    }
-//
-//                    // Save
-//                    IconButton(
-//                        onClick = { showSaveDialog = true },
-//                        enabled = editorState is EditorState.Success && !isSaving && !isManualEditMode
-//                    ) {
-//                        if (isSaving) {
-//                            CircularProgressIndicator(
-//                                modifier = Modifier.size(24.dp),
-//                                strokeWidth = 2.dp
-//                            )
-//                        } else {
-//                            Icon(
-//                                Icons.Default.Save,
-//                                "Save",
-//                                tint = if (editorState is EditorState.Success)
-//                                    MaterialTheme.colorScheme.onSurface
-//                                else
-//                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-//                            )
-//                        }
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = MaterialTheme.colorScheme.surface
-//                )
-//            )
-//        },
-//        bottomBar = {
-//            if (editorState is EditorState.Success) {
-//                if (isManualEditMode) {
-//                    // Show brush control panel in manual edit mode
-//                    BrushControlPanel(
-//                        brushTool = currentBrushTool,
-//                        onBrushToolChange = { newTool ->
-//                            viewModel.updateBrushTool(
-//                                mode = newTool.mode,
-//                                size = newTool.size,
-//                                hardness = newTool.hardness,
-//                                opacity = newTool.opacity
-//                            )
-//                        },
-//                        onClearStrokes = { viewModel.clearBrushStrokes() },
-//                        onSmoothMask = { viewModel.smoothMask() },
-//                        onApplyStrokes = { viewModel.applyStrokes() },
-//                        onDone = { viewModel.exitManualEditMode(applyChanges = true) },
-//                        onCancel = { viewModel.exitManualEditMode(applyChanges = false) }
-//                    )
-//                } else {
-//                    // Show background picker button normally
-//                    BottomAppBar(
-//                        containerColor = MaterialTheme.colorScheme.surface,
-//                        contentPadding = PaddingValues(16.dp)
-//                    ) {
-//                        Button(
-//                            onClick = { showBackgroundPicker = true },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            enabled = !isProcessing,
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = Primary
-//                            ),
-//                            shape = RoundedCornerShape(12.dp)
-//                        ) {
-//                            Icon(Icons.Default.ColorLens, null)
-//                            Spacer(Modifier.width(8.dp))
-//                            Text("Change Background")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    ) { padding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding)
-//        ) {
-//            when (editorState) {
-//                is EditorState.Idle -> {
-//                    // This shouldn't happen in editor screen
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Text("No image loaded")
-//                    }
-//                }
-//
-//                is EditorState.Loading, EditorState.Idle -> {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                            verticalArrangement = Arrangement.spacedBy(16.dp)
-//                        ) {
-//                            CircularProgressIndicator(
-//                                modifier = Modifier.size(64.dp),
-//                                color = Primary,
-//                                strokeWidth = 6.dp
-//                            )
-//                            Text(
-//                                "Processing image with AI...",
-//                                style = MaterialTheme.typography.titleMedium,
-//                                color = MaterialTheme.colorScheme.onSurface
-//                            )
-//                            Text(
-//                                "This may take a few seconds",
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                is EditorState.Success -> {
-//                    Column(
-//                        modifier = Modifier.fillMaxSize()
-//                    ) {
-//                        // Image Preview with Drawing Canvas
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .weight(1f)
-//                                .padding(16.dp)
-//                                .clip(RoundedCornerShape(20.dp))
-//                                .background(
-//                                    brush = Brush.linearGradient(
-//                                        colors = listOf(
-//                                            Color(0xFFEEEEEE),
-//                                            Color(0xFFCCCCCC)
-//                                        )
-//                                    )
-//                                )
-//                                .border(
-//                                    width = 1.dp,
-//                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-//                                    shape = RoundedCornerShape(20.dp)
-//                                ),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            if (isManualEditMode) {
-//                                // Drawing canvas for manual editing
-//                                DrawingCanvas(
-//                                    bitmap = editorState.bitmap,
-//                                    brushTool = currentBrushTool,
-//                                    isEnabled = !isProcessing,
-//                                    onDrawingPath = { path ->
-//                                        viewModel.addBrushStroke(path)
-//                                    },
-//                                    modifier = Modifier.fillMaxSize()
-//                                )
-//
-//                                // Brush mode indicator
-//                                Box(
-//                                    modifier = Modifier
-//                                        .align(Alignment.TopStart)
-//                                        .padding(16.dp)
-//                                ) {
-//                                    Surface(
-//                                        color = when (currentBrushTool.mode) {
-//                                            BrushMode.ERASE -> Color.Red.copy(alpha = 0.9f)
-//                                            BrushMode.RESTORE -> Color.Green.copy(alpha = 0.9f)
-//                                        },
-//                                        shape = RoundedCornerShape(8.dp)
-//                                    ) {
-//                                        Row(
-//                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-//                                            verticalAlignment = Alignment.CenterVertically,
-//                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-//                                        ) {
-//                                            Icon(
-//                                                when (currentBrushTool.mode) {
-//                                                    BrushMode.ERASE -> Icons.Default.Delete
-//                                                    BrushMode.RESTORE -> Icons.Default.Brush
-//                                                },
-//                                                contentDescription = null,
-//                                                tint = Color.White,
-//                                                modifier = Modifier.size(20.dp)
-//                                            )
-//                                            Text(
-//                                                when (currentBrushTool.mode) {
-//                                                    BrushMode.ERASE -> "Erase"
-//                                                    BrushMode.RESTORE -> "Restore"
-//                                                },
-//                                                color = Color.White,
-//                                                style = MaterialTheme.typography.labelMedium,
-//                                                fontWeight = FontWeight.Bold
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            } else {
-//                                // Normal image preview
-//                                Image(
-//                                    bitmap = editorState.bitmap.asImageBitmap(),
-//                                    contentDescription = "Edited Image",
-//                                    modifier = Modifier.fillMaxSize(),
-//                                    contentScale = ContentScale.Fit
-//                                )
-//                            }
-//
-//                            // Processing overlay
-//                            if (isProcessing) {
-//                                Box(
-//                                    modifier = Modifier
-//                                        .fillMaxSize()
-//                                        .background(Color.Black.copy(alpha = 0.5f)),
-//                                    contentAlignment = Alignment.Center
-//                                ) {
-//                                    CircularProgressIndicator(
-//                                        color = Color.White,
-//                                        strokeWidth = 4.dp
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                is EditorState.Error -> {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally,
-//                            verticalArrangement = Arrangement.spacedBy(16.dp)
-//                        ) {
-//                            Icon(
-//                                Icons.Default.Error,
-//                                contentDescription = null,
-//                                modifier = Modifier.size(64.dp),
-//                                tint = MaterialTheme.colorScheme.error
-//                            )
-//                            Text(
-//                                "Error",
-//                                style = MaterialTheme.typography.titleLarge,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                            Text(
-//                                editorState.message,
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant
-//                            )
-//                            Button(onClick = onBackClick) {
-//                                Text("Go Back")
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    // Background Picker Bottom Sheet
-//    if (showBackgroundPicker) {
-//        BackgroundPickerSheet(
-//            currentBackground = currentBackground,
-//            onBackgroundSelected = { background ->
-//                viewModel.applyBackground(background)
-//                showBackgroundPicker = false
-//            },
-//            onDismiss = { showBackgroundPicker = false }
-//        )
-//    }
-//
-//    // Save Dialog
-//    if (showSaveDialog) {
-//        SaveDialog(
-//            onSave = { format ->
-//                viewModel.saveBitmap(format) { result ->
-//                    result.fold(
-//                        onSuccess = {
-//                            Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
-//                        },
-//                        onFailure = { error ->
-//                            Toast.makeText(context, "Failed to save: ${error.message}", Toast.LENGTH_SHORT).show()
-//                        }
-//                    )
-//                }
-//                showSaveDialog = false
-//            },
-//            onDismiss = { showSaveDialog = false }
-//        )
-//    }
-//}
-//
-
-//
-
-
-//
 package com.remover.background.AI.ui.screens
 
 import android.graphics.Bitmap
@@ -467,6 +51,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.ui.components.BrushControlPanel
@@ -474,7 +59,18 @@ import com.remover.background.AI.ui.components.DrawingCanvas
 import com.remover.background.AI.ui.theme.*
 import com.remover.background.AI.viewmodel.EditorState
 import com.remover.background.AI.viewmodel.EditorViewModel
+import com.remover.background.AI.ui.components.ColorPicker
+import com.remover.background.AI.ui.components.GradientBuilder
+import kotlinx.coroutines.delay
 
+
+enum class PickerView {
+    Main,
+    CustomColor,
+    CustomGradient,
+    GradientStartColor,
+    GradientEndColor
+}
 
 @Composable
 fun ZoomableBox(
@@ -606,87 +202,25 @@ fun CheckerboardBackground(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun ImageWithCheckerboard(
-    bitmap: android.graphics.Bitmap,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Fit
-) {
-    BoxWithConstraints(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        val imageAspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
-        val containerAspectRatio = maxWidth / maxHeight
-        
-        // Calculate the actual size the image will occupy with ContentScale.Fit
-        val (imageWidth, imageHeight) = if (imageAspectRatio > containerAspectRatio) {
-            // Image is wider - width fills, height scales
-            maxWidth to (maxWidth / imageAspectRatio)
-        } else {
-            // Image is taller - height fills, width scales
-            (maxHeight * imageAspectRatio) to maxHeight
-        }
-        
-        // Checkerboard only in the exact image area
-        CheckerboardBackground(
-            modifier = Modifier.size(imageWidth, imageHeight)
-        )
-        
-        // Image on top
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = contentScale
-        )
-    }
-}
 
-@Composable
-fun SaveDialog(
-    onSave: (Bitmap.CompressFormat) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Save Image") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Choose format:")
-                Button(
-                    onClick = { onSave(Bitmap.CompressFormat.PNG) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("PNG (Transparent)")
-                }
-                Button(
-                    onClick = { onSave(Bitmap.CompressFormat.JPEG) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("JPEG (Smaller size)")
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
+
+
 
 @Composable
 fun BackgroundLayer(
     backgroundType: BackgroundType,
-    originalBitmap: android.graphics.Bitmap? = null,
+    originalBitmap: Bitmap? = null,
+    blurredBitmap: Bitmap? = null,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
         when (backgroundType) {
             is BackgroundType.Transparent -> {
-                CheckerboardBackground(modifier = Modifier.fillMaxSize())
+                CheckerboardBackground(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                )
             }
             is BackgroundType.SolidColor -> {
                 Box(
@@ -696,16 +230,34 @@ fun BackgroundLayer(
                 )
             }
             is BackgroundType.Gradient -> {
+                val gradientBrush = remember(backgroundType.startColor, backgroundType.endColor, backgroundType.angle) {
+                    object : androidx.compose.ui.graphics.ShaderBrush() {
+                        override fun createShader(size: androidx.compose.ui.geometry.Size): androidx.compose.ui.graphics.Shader {
+                            val w = size.width
+                            val h = size.height
+                            val r = backgroundType.angle * (kotlin.math.PI / 180.0)
+                            val cx = w / 2
+                            val cy = h / 2
+                            val d = kotlin.math.sqrt((w*w + h*h).toDouble()) / 2
+                            
+                            val sx = cx - d * kotlin.math.cos(r)
+                            val sy = cy - d * kotlin.math.sin(r)
+                            val ex = cx + d * kotlin.math.cos(r)
+                            val ey = cy + d * kotlin.math.sin(r)
+                            
+                            return androidx.compose.ui.graphics.LinearGradientShader(
+                                from = androidx.compose.ui.geometry.Offset(sx.toFloat(), sy.toFloat()),
+                                to = androidx.compose.ui.geometry.Offset(ex.toFloat(), ey.toFloat()),
+                                colors = listOf(backgroundType.startColor, backgroundType.endColor),
+                                tileMode = androidx.compose.ui.graphics.TileMode.Clamp
+                            )
+                        }
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(backgroundType.startColor, backgroundType.endColor),
-                                start = Offset.Zero,
-                                end = Offset.Infinite
-                            )
-                        )
+                        .background(gradientBrush)
                 )
             }
             is BackgroundType.CustomImage -> {
@@ -727,13 +279,18 @@ fun BackgroundLayer(
                 }
             }
             is BackgroundType.Blur -> {
-                if (originalBitmap != null) {
-                    // Note: Modifier.blur requires API 31+. For lower APIs, we might need a different approach.
-                    // For now, we show the original image.
+                if (blurredBitmap != null) {
+                    Image(
+                        bitmap = blurredBitmap.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (originalBitmap != null) {
                     Image(
                         bitmap = originalBitmap.asImageBitmap(),
                         contentDescription = null,
-                        contentScale = ContentScale.Fit,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -825,6 +382,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                         BackgroundLayer(
                             backgroundType = viewModel.currentBackground,
                             originalBitmap = viewModel.originalBitmap,
+                            blurredBitmap = viewModel.blurredBackgroundBitmap,
                             modifier = Modifier.fillMaxSize()
                         )
                         
@@ -848,7 +406,9 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                         }
                     }
                 }
-            } else if (viewModel.isProcessing) {
+            }
+            
+            if (viewModel.isProcessing) {
                 CircularProgressIndicator(
                     color = Primary,
                     modifier = Modifier.size(48.dp)
@@ -1059,87 +619,7 @@ fun EditorMenuItem(
 }
 
 
-@Composable
-fun CompactEditBtn(
-    icon: androidx.compose.ui.graphics.vector.ImageVector, 
-    text: String, 
-    isProcessing: Boolean = false,
-    onClick: () -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(enabled = !isProcessing, onClick = onClick)
-            .background(Color.White.copy(if (isProcessing) 0.05f else 0.08f))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    ) {
-        Box(
-            modifier = Modifier.size(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isProcessing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = Primary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Icon(
-                    icon, 
-                    contentDescription = null, 
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-        Text(
-            text, 
-            color = Color.White.copy(if (isProcessing) 0.5f else 1f),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
 
-@Composable
-fun VerticalDivider() {
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(24.dp)
-            .background(Color.White.copy(0.15f))
-    )
-}
-
-@Composable
-fun EditBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick)) {
-        Box(
-            modifier = Modifier.size(56.dp).clip(CircleShape).background(Color.White.copy(0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, tint = Color.White)
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(text, color = Color.White, style = MaterialTheme.typography.labelMedium)
-    }
-}
-
-@Composable
-fun EditOption(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick)) {
-        Box(
-            modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White.copy(0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, tint = Color.White)
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall)
-    }
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1151,75 +631,206 @@ fun BackgroundPickerSheet(
     onDismiss: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Colors", "Gradients", "Image", "Blur")
+    val tabs = listOf("Colors", "Gradients", "Images", "Blur")
+    
+    // State Management
+    var currentView by remember { mutableStateOf(PickerView.Main) }
+    var gradientStart by remember { mutableStateOf(Color.Blue) }
+    var gradientEnd by remember { mutableStateOf(Color.Cyan) }
+    var gradientAngle by remember { mutableFloatStateOf(0f) }
 
+    // Sync local state with current background
+    LaunchedEffect(currentBackground) {
+        if (currentBackground is BackgroundType.Gradient) {
+            gradientStart = currentBackground.startColor
+            gradientEnd = currentBackground.endColor
+            gradientAngle = currentBackground.angle
+        }
+    }
+
+    // Helper to handle back press
+    val onBack = {
+        when (currentView) {
+            PickerView.Main -> onDismiss()
+            PickerView.CustomColor -> currentView = PickerView.Main
+            PickerView.CustomGradient -> currentView = PickerView.Main
+            PickerView.GradientStartColor -> currentView = PickerView.CustomGradient
+            PickerView.GradientEndColor -> currentView = PickerView.CustomGradient
+        }
+    }
+
+    // Create sheet state to open fully expanded
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    // If not Main, show full screen picker
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = Color(0xFF1E1E1E),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(0.2f)) }
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.Gray) }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp)
-        ) {
-            Text(
-                "Background",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-            )
+        if (currentView != PickerView.Main) {
+            // ... (Detail Views: Custom Color, Gradient, etc.)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {
+                        when (currentView) {
+                            PickerView.Main -> onDismiss()
+                            PickerView.CustomColor -> currentView = PickerView.Main
+                            PickerView.CustomGradient -> currentView = PickerView.Main
+                            PickerView.GradientStartColor -> currentView = PickerView.CustomGradient
+                            PickerView.GradientEndColor -> currentView = PickerView.CustomGradient
+                        }
+                    }) {
+                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                    }
+                    
+                    Text(
+                        text = when (currentView) {
+                            PickerView.CustomColor -> "Custom Color"
+                            PickerView.CustomGradient -> "Custom Gradient"
+                            PickerView.GradientStartColor -> "Start Color"
+                            PickerView.GradientEndColor -> "End Color"
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(Modifier.width(48.dp)) // Balance the back button
+                }
 
-            ScrollableTabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color.Transparent,
-                contentColor = Color.White,
-                edgePadding = 16.dp,
-                indicator = { tabPositions ->
-                    if (selectedTab < tabPositions.size) {
-                        TabRowDefaults.Indicator(
-                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = Primary,
-                            height = 3.dp
+                Spacer(Modifier.height(16.dp))
+
+                // Content
+                when (currentView) {
+                    PickerView.CustomColor -> {
+                        com.remover.background.AI.ui.components.ColorPicker(
+                            initialColor = (currentBackground as? BackgroundType.SolidColor)?.color ?: Color.White,
+                            onColorChanged = { onBackgroundSelected(BackgroundType.SolidColor(it)) }
                         )
                     }
-                },
-                divider = {
-                    HorizontalDivider(color = Color.White.copy(0.1f))
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = { 
-                            Text(
-                                title, 
-                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                color = if (selectedTab == index) Color.White else Color.Gray
-                            ) 
-                        }
-                    )
+                    PickerView.CustomGradient -> {
+                        com.remover.background.AI.ui.components.GradientBuilder(
+                            startColor = gradientStart,
+                            endColor = gradientEnd,
+                            angle = gradientAngle,
+                            onStartColorClick = { currentView = PickerView.GradientStartColor },
+                            onEndColorClick = { currentView = PickerView.GradientEndColor },
+                            onAngleChange = { 
+                                gradientAngle = it
+                            },
+                            onAngleChangeFinished = {
+                                onBackgroundSelected(BackgroundType.Gradient(gradientStart, gradientEnd, gradientAngle))
+                            },
+                            onSwapColors = {
+                                 val temp = gradientStart
+                                 gradientStart = gradientEnd
+                                 gradientEnd = temp
+                                 onBackgroundSelected(BackgroundType.Gradient(gradientStart, gradientEnd, gradientAngle))
+                            },
+                            onPreviewClick = {
+                                onBackgroundSelected(BackgroundType.Gradient(gradientStart, gradientEnd, gradientAngle))
+                            }
+                        )
+                    }
+                    PickerView.GradientStartColor -> {
+                        com.remover.background.AI.ui.components.ColorPicker(
+                            initialColor = gradientStart,
+                            onColorChanged = { 
+                                gradientStart = it
+                                onBackgroundSelected(BackgroundType.Gradient(it, gradientEnd, gradientAngle))
+                            }
+                        )
+                    }
+                    PickerView.GradientEndColor -> {
+                        com.remover.background.AI.ui.components.ColorPicker(
+                            initialColor = gradientEnd,
+                            onColorChanged = { 
+                                gradientEnd = it
+                                onBackgroundSelected(BackgroundType.Gradient(gradientStart, it, gradientAngle))
+                            }
+                        )
+                    }
+                    else -> {}
                 }
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ScrollableTabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White,
+                    edgePadding = 16.dp,
+                    indicator = { tabPositions ->
+                        if (selectedTab < tabPositions.size) {
+                            TabRowDefaults.Indicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = Primary,
+                                height = 3.dp
+                            )
+                        }
+                    },
+                    divider = {
+                        HorizontalDivider(color = Color.White.copy(0.1f))
+                    }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { 
+                                Text(
+                                    title, 
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (selectedTab == index) Color.White else Color.Gray
+                                ) 
+                            }
+                        )
+                    }
+                }
 
-            Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
-            Box(modifier = Modifier.height(280.dp).padding(horizontal = 16.dp)) {
-                when (selectedTab) {
-                    0 -> ColorsGrid(currentBackground, onBackgroundSelected)
-                    1 -> GradientsGrid(currentBackground, onBackgroundSelected)
-                    2 -> ImagesGrid(currentBackground, onBackgroundSelected, onPickCustomImage)
-                    3 -> BlurControl(currentBackground, onBackgroundSelected)
+                Box(modifier = Modifier.height(280.dp).padding(horizontal = 16.dp)) {
+                    when (selectedTab) {
+                        0 -> ColorsGrid(currentBackground, onBackgroundSelected, onPickCustomColor = { currentView = PickerView.CustomColor })
+                        1 -> GradientsGrid(currentBackground, onBackgroundSelected, onPickCustomGradient = { currentView = PickerView.CustomGradient })
+                        2 -> ImagesGrid(currentBackground, onBackgroundSelected, onPickCustomImage)
+                        3 -> BlurControl(currentBackground, onBackgroundSelected)
+                    }
                 }
             }
         }
     }
 }
 
+
+
 @Composable
-fun ColorsGrid(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
+fun ColorsGrid(
+    current: BackgroundType, 
+    onSelect: (BackgroundType) -> Unit,
+    onPickCustomColor: () -> Unit
+) {
     val colors = listOf(
         Color.White, Color.Black, Color(0xFFF44336), Color(0xFFE91E63),
         Color(0xFF9C27B0), Color(0xFF673AB7), Color(0xFF3F51B5), Color(0xFF2196F3),
@@ -1233,6 +844,41 @@ fun ColorsGrid(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            // Custom Color Button
+            val isCustomSelected = current is BackgroundType.SolidColor && current.color !in colors
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.sweepGradient(
+                            colors = listOf(
+                                Color.Red, Color.Magenta, Color.Blue, Color.Cyan,
+                                Color.Green, Color.Yellow, Color.Red
+                            )
+                        )
+                    )
+                    .then(
+                        if (isCustomSelected) Modifier.border(2.dp, Primary, CircleShape)
+                        else Modifier.border(1.dp, Color.White.copy(0.1f), CircleShape)
+                    )
+                    .clickable { onPickCustomColor() },
+                contentAlignment = Alignment.Center
+            ) {
+                if (isCustomSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f))
+                    )
+                    Icon(Icons.Default.CheckCircle, null, tint = Primary)
+                } else {
+                    Icon(Icons.Default.Add, contentDescription = "Custom", tint = Color.White)
+                }
+            }
+        }
+
         item {
             // Transparent Option
             SelectionItem(
@@ -1254,28 +900,61 @@ fun ColorsGrid(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
 }
 
 @Composable
-fun GradientsGrid(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
+fun GradientsGrid(
+    current: BackgroundType, 
+    onSelect: (BackgroundType) -> Unit,
+    onPickCustomGradient: () -> Unit
+) {
     val gradients = listOf(
-        Color(0xFFFF9A9E) to Color(0xFFFECFEF),
-        Color(0xFFA18CD1) to Color(0xFFFBC2EB),
-        Color(0xFF84FAB0) to Color(0xFF8FD3F4),
-        Color(0xFFE0C3FC) to Color(0xFF8EC5FC),
-        Color(0xFF43E97B) to Color(0xFF38F9D7),
-        Color(0xFFFA709A) to Color(0xFFFEE140),
-        Color(0xFF30CFD0) to Color(0xFF330867),
-        Color(0xFF667EEA) to Color(0xFF764BA2)
+        Pair(Color(0xFF2196F3), Color(0xFFE91E63)),
+        Pair(Color(0xFF4CAF50), Color(0xFFFFEB3B)),
+        Pair(Color(0xFFFF9800), Color(0xFFF44336)),
+        Pair(Color(0xFF9C27B0), Color(0xFF3F51B5)),
+        Pair(Color(0xFF00BCD4), Color(0xFF009688)),
+        Pair(Color(0xFF673AB7), Color(0xFFE91E63)),
+        Pair(Color(0xFFFF5722), Color(0xFFFFC107)),
+        Pair(Color(0xFF795548), Color(0xFF3E2723))
     )
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(5),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            // Custom Gradient Button
+            val isCustomSelected = current is BackgroundType.Gradient && 
+                                  !gradients.any { it.first == current.startColor && it.second == current.endColor }
+            
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(Color.Blue, Color.Cyan)))
+                    .then(
+                        if (isCustomSelected) Modifier.border(2.dp, Primary, CircleShape)
+                        else Modifier.border(1.dp, Color.White.copy(0.1f), CircleShape)
+                    )
+                    .clickable { onPickCustomGradient() },
+                contentAlignment = Alignment.Center
+            ) {
+                if (isCustomSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f))
+                    )
+                    Icon(Icons.Default.CheckCircle, null, tint = Primary)
+                } else {
+                    Icon(Icons.Default.Add, contentDescription = "Custom", tint = Color.White)
+                }
+            }
+        }
+
         items(gradients) { (start, end) ->
             SelectionItem(
                 isSelected = current is BackgroundType.Gradient && current.startColor == start,
-                onClick = { onSelect(BackgroundType.Gradient(start, end)) },
-                aspectRatio = 1.5f
+                onClick = { onSelect(BackgroundType.Gradient(start, end)) }
             ) {
                 Box(
                     Modifier.fillMaxSize().background(
@@ -1324,17 +1003,29 @@ fun ImagesGrid(
 
 @Composable
 fun BlurControl(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
-    var intensity by remember { mutableFloatStateOf(10f) }
+    // Initialize from current background if it's Blur, otherwise default to 10f
+    var sliderValue by remember { 
+        mutableFloatStateOf(
+            if (current is BackgroundType.Blur) current.intensity else 10f
+        ) 
+    }
+    
+    // Debounce updates to prevent UI blocking
+    LaunchedEffect(sliderValue) {
+        // Check if update is needed
+        val currentIntensity = (current as? BackgroundType.Blur)?.intensity
+        if (currentIntensity == sliderValue) return@LaunchedEffect
+        
+        delay(100) // 100ms debounce
+        onSelect(BackgroundType.Blur(sliderValue))
+    }
     
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Blur Intensity", color = Color.Gray, modifier = Modifier.padding(bottom = 16.dp))
         
         Slider(
-            value = intensity,
-            onValueChange = { 
-                intensity = it
-                onSelect(BackgroundType.Blur(it))
-            },
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
             valueRange = 1f..25f,
             colors = SliderDefaults.colors(
                 thumbColor = Primary,

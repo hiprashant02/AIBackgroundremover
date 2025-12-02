@@ -31,11 +31,17 @@ import androidx.compose.ui.unit.sp
 import com.remover.background.AI.R
 import com.remover.background.AI.ui.theme.*
 
+import androidx.compose.ui.platform.LocalContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onImageSelected: (Uri) -> Unit
 ) {
+    val context = LocalContext.current
     var showPermissionDialog by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -47,7 +53,25 @@ fun HomeScreen(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-        // Handle camera result if needed
+        if (bitmap != null) {
+            try {
+                val file = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
+                val stream = FileOutputStream(file)
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, stream)
+                stream.close()
+                onImageSelected(Uri.fromFile(file))
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        }
     }
 
     // Animation states
@@ -148,6 +172,8 @@ fun HomeScreen(
                     }
                 )
 
+
+
                 // Camera Button
                 ActionButton(
                     icon = Icons.Default.CameraAlt,
@@ -157,7 +183,12 @@ fun HomeScreen(
                         colors = listOf(Secondary, SecondaryLight)
                     ),
                     onClick = {
-                        cameraLauncher.launch(null)
+                        val permission = android.Manifest.permission.CAMERA
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            cameraLauncher.launch(null)
+                        } else {
+                            permissionLauncher.launch(permission)
+                        }
                     }
                 )
             }

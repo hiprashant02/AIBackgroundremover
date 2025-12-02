@@ -51,6 +51,8 @@ class EditorViewModel : ViewModel() {
         private set
     var currentBackground by mutableStateOf<BackgroundType>(BackgroundType.Transparent)
         private set
+    var blurredBackgroundBitmap by mutableStateOf<Bitmap?>(null)
+        private set
     
     // Subject Transform State
     var subjectScale by mutableStateOf(1f)
@@ -143,9 +145,19 @@ class EditorViewModel : ViewModel() {
     private fun applyBackgroundToForeground(background: BackgroundType) {
         backgroundJob?.cancel()
         backgroundJob = viewModelScope.launch {
+            isProcessing = true
             try {
                 val orig = originalBitmap ?: return@launch
                 val fg = foregroundBitmap ?: return@launch
+                
+                val precomputedBlur = if (background is BackgroundType.Blur) {
+                     withContext(Dispatchers.Default) {
+                         imageProcessor.fastBlur(orig, background.intensity.toInt())
+                     }
+                } else null
+                
+                blurredBackgroundBitmap = precomputedBlur
+
                 val result = imageProcessor.composeFinalImage(
                     fg, 
                     background, 
@@ -155,12 +167,15 @@ class EditorViewModel : ViewModel() {
                     subjectPosition.x,
                     subjectPosition.y,
                     subjectScale,
-                    subjectRotation
+                    subjectRotation,
+                    precomputedBlur
                 )
                 currentBackground = background
                 editorState = EditorState.Success(result)
             } catch (e: Exception) {
                 // Handle error or cancellation
+            } finally {
+                isProcessing = false
             }
         }
     }

@@ -60,7 +60,8 @@ class ImageProcessor {
         subjectX: Float = 0f,
         subjectY: Float = 0f,
         subjectScale: Float = 1f,
-        subjectRotation: Float = 0f
+        subjectRotation: Float = 0f,
+        precomputedBlurredBitmap: Bitmap? = null
     ): Bitmap = withContext(Dispatchers.Default) {
         val result = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(result)
@@ -78,7 +79,9 @@ class ImageProcessor {
                 drawGradientBackground(canvas, originalWidth, originalHeight, background)
             }
             is BackgroundType.Blur -> {
-                if (originalBitmap != null) {
+                if (precomputedBlurredBitmap != null) {
+                    canvas.drawBitmap(precomputedBlurredBitmap, 0f, 0f, paint)
+                } else if (originalBitmap != null) {
                     drawBlurredBackground(canvas, originalBitmap, background.intensity)
                 }
             }
@@ -224,11 +227,19 @@ class ImageProcessor {
         height: Int,
         gradient: BackgroundType.Gradient
     ) {
+        val angleRad = Math.toRadians(gradient.angle.toDouble())
+        val cx = width / 2f
+        val cy = height / 2f
+        val length = Math.sqrt((width * width + height * height).toDouble()).toFloat()
+        
+        // Calculate start and end points based on center and angle
+        val dx = (Math.cos(angleRad) * length / 2).toFloat()
+        val dy = (Math.sin(angleRad) * length / 2).toFloat()
+        
         val paint = Paint().apply {
             shader = LinearGradient(
-                0f, 0f,
-                width * Math.cos(Math.toRadians(gradient.angle.toDouble())).toFloat(),
-                height * Math.sin(Math.toRadians(gradient.angle.toDouble())).toFloat(),
+                cx - dx, cy - dy,
+                cx + dx, cy + dy,
                 gradient.startColor.toArgb(),
                 gradient.endColor.toArgb(),
                 Shader.TileMode.CLAMP
@@ -271,7 +282,7 @@ class ImageProcessor {
         blurred.recycle()
     }
 
-    private fun fastBlur(bitmap: Bitmap, radius: Int): Bitmap {
+    fun fastBlur(bitmap: Bitmap, radius: Int): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
 
