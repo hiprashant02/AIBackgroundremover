@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -21,6 +22,7 @@ import com.remover.background.AI.utils.FileManager
 import com.remover.background.AI.utils.ImageProcessor
 import com.remover.background.AI.utils.ManualEditingProcessor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -57,6 +59,7 @@ class EditorViewModel : ViewModel() {
         private set
     var subjectRotation by mutableStateOf(0f)
         private set
+    var displayScaleFactor by mutableFloatStateOf(1f)
 
     var isProcessing by mutableStateOf(false)
         private set
@@ -135,26 +138,30 @@ class EditorViewModel : ViewModel() {
     }
 
     // ... Background Application Logic (Unchanged) ...
+    private var backgroundJob: Job? = null
+
     private fun applyBackgroundToForeground(background: BackgroundType) {
-        viewModelScope.launch {
-            isProcessing = true
+        backgroundJob?.cancel()
+        backgroundJob = viewModelScope.launch {
             try {
                 val orig = originalBitmap ?: return@launch
                 val fg = foregroundBitmap ?: return@launch
                 val result = imageProcessor.composeFinalImage(
-                fg, 
-                background, 
-                orig.width, 
-                orig.height, 
-                orig,
-                subjectPosition.x,
-                subjectPosition.y,
-                subjectScale,
-                subjectRotation
-            )
+                    fg, 
+                    background, 
+                    orig.width, 
+                    orig.height, 
+                    orig,
+                    subjectPosition.x,
+                    subjectPosition.y,
+                    subjectScale,
+                    subjectRotation
+                )
                 currentBackground = background
                 editorState = EditorState.Success(result)
-            } finally { isProcessing = false }
+            } catch (e: Exception) {
+                // Handle error or cancellation
+            }
         }
     }
 
@@ -171,17 +178,48 @@ class EditorViewModel : ViewModel() {
         viewModelScope.launch {
             isSaving = true
             try {
-                val bitmap = (editorState as? EditorState.Success)?.bitmap
-                if (bitmap != null) {
+                val currentFg = foregroundBitmap
+                val currentBg = currentBackground
+                val orig = originalBitmap
+
+                if (currentFg != null && orig != null) {
+                    // Recompose final image with latest transform to ensure WYSIWYG
+                    val finalBitmap = withContext(Dispatchers.Default) {
+                        imageProcessor.composeFinalImage(
+                            foreground = currentFg,
+                            background = currentBg,
+                            originalWidth = orig.width,
+                            originalHeight = orig.height,
+                            originalBitmap = orig,
+                            subjectX = subjectPosition.x,
+                            subjectY = subjectPosition.y,
+                            subjectScale = subjectScale,
+                            subjectRotation = subjectRotation
+                        )
+                    }
+
                     val fileName = "edited_${System.currentTimeMillis()}.png"
-                    val result = fileManager?.saveBitmapToGallery(bitmap, fileName, format)
+                    val result = fileManager?.saveBitmapToGallery(finalBitmap, fileName, format)
+                    
                     if (result != null) {
                         onComplete(result)
                     } else {
                         onComplete(Result.failure(Exception("FileManager not initialized")))
                     }
                 } else {
-                    onComplete(Result.failure(Exception("No image to save")))
+                    // Fallback to existing state if something is missing
+                    val bitmap = (editorState as? EditorState.Success)?.bitmap
+                    if (bitmap != null) {
+                        val fileName = "edited_${System.currentTimeMillis()}.png"
+                        val result = fileManager?.saveBitmapToGallery(bitmap, fileName, format)
+                        if (result != null) {
+                            onComplete(result)
+                        } else {
+                            onComplete(Result.failure(Exception("FileManager not initialized")))
+                        }
+                    } else {
+                        onComplete(Result.failure(Exception("No image to save")))
+                    }
                 }
             } catch (e: Exception) {
                 onComplete(Result.failure(e))
@@ -199,8 +237,41 @@ class EditorViewModel : ViewModel() {
 
     fun updateSubjectTransform(pan: Offset, zoom: Float, rotation: Float) {
         subjectScale = (subjectScale * zoom).coerceIn(0.1f, 5f)
-        subjectPosition += pan
+        // Convert screen pan to bitmap pan
+        subjectPosition += pan / displayScaleFactor
         subjectRotation += rotation
+    }
+
+    fun isSubjectHit(contentPoint: Offset): Boolean {
+        val fg = foregroundBitmap ?: return false
+        val width = fg.width.toFloat()
+        val height = fg.height.toFloat()
+        val cx = width / 2f
+        val cy = height / 2f
+        
+        // Inverse Transform (Content -> Subject Local)
+        // Convert content point (screen) to bitmap coords
+        val bitmapPoint = contentPoint / displayScaleFactor
+
+        // 1. Untranslate
+        val tx = bitmapPoint.x - subjectPosition.x
+        val ty = bitmapPoint.y - subjectPosition.y
+        
+        // 2. Unrotate
+        val rad = Math.toRadians(-subjectRotation.toDouble())
+        val cos = Math.cos(rad)
+        val sin = Math.sin(rad)
+        val dx = tx - cx
+        val dy = ty - cy
+        val rx = cx + (dx * cos - dy * sin).toFloat()
+        val ry = cy + (dx * sin + dy * cos).toFloat()
+        
+        // 3. Unscale
+        val sx = cx + (rx - cx) / subjectScale
+        val sy = cy + (ry - cy) / subjectScale
+        
+        // Check bounds
+        return sx in 0f..width && sy in 0f..height
     }
 
     // --- Undo / Redo Logic ---

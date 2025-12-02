@@ -9,6 +9,7 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.RectF
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.net.Uri
@@ -68,8 +69,7 @@ class ImageProcessor {
         // 1. Draw the selected background
         when (background) {
             is BackgroundType.Transparent -> {
-                // Draw checkerboard pattern for transparent background
-                drawCheckerboard(canvas, originalWidth, originalHeight)
+                // Keep transparent (do not draw checkerboard)
             }
             is BackgroundType.SolidColor -> {
                 canvas.drawColor(background.color.toArgb())
@@ -88,12 +88,25 @@ class ImageProcessor {
                 }
             }
             is BackgroundType.CustomImage -> {
-                // Scale and draw custom image as background
-                val scaledBg = Bitmap.createScaledBitmap(background.bitmap, originalWidth, originalHeight, true)
-                canvas.drawBitmap(scaledBg, 0f, 0f, paint)
-                if (scaledBg != background.bitmap) {
-                    scaledBg.recycle()
+                // Crop logic: Center Crop to fill canvas
+                val bgWidth = background.bitmap.width
+                val bgHeight = background.bitmap.height
+                val canvasRatio = originalWidth.toFloat() / originalHeight
+                val bgRatio = bgWidth.toFloat() / bgHeight
+                
+                val (drawW, drawH) = if (bgRatio > canvasRatio) {
+                    // Background is wider than canvas: Fit Height, Crop Width
+                    (originalHeight * bgRatio) to originalHeight.toFloat()
+                } else {
+                    // Background is taller than canvas: Fit Width, Crop Height
+                    originalWidth.toFloat() to (originalWidth / bgRatio)
                 }
+                
+                val left = (originalWidth - drawW) / 2f
+                val top = (originalHeight - drawH) / 2f
+                
+                val destRect = RectF(left, top, left + drawW, top + drawH)
+                canvas.drawBitmap(background.bitmap, null, destRect, paint)
             }
         }
 
