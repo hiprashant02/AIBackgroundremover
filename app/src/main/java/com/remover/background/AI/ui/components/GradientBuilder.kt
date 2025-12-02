@@ -102,7 +102,7 @@ fun GradientBuilder(
             ColorCircle(color = startColor, label = "Start", onClick = onStartColorClick)
             
             IconButton(onClick = onSwapColors) {
-                Icon(Icons.Default.SwapHoriz, contentDescription = "Swap", tint = Color.White)
+                Icon(Icons.Default.SwapHoriz, contentDescription = "Swap", tint = MaterialTheme.colorScheme.onSurface)
             }
             
             ColorCircle(color = endColor, label = "End", onClick = onEndColorClick)
@@ -111,7 +111,7 @@ fun GradientBuilder(
         Spacer(modifier = Modifier.height(24.dp))
         
         // Angle Slider
-        Text("Angle: ${angle.toInt()}°", color = Color.White)
+        Text("Angle: ${angle.toInt()}°", color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = angle,
             onValueChange = onAngleChange,
@@ -133,7 +133,7 @@ fun ColorCircle(color: Color, label: String, onClick: () -> Unit) {
                 .size(60.dp)
                 .clip(CircleShape)
                 .background(color)
-                .border(2.dp, Color.White, CircleShape)
+                .border(2.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), CircleShape)
                 .clickable(onClick = onClick)
         )
         Spacer(modifier = Modifier.height(8.dp))

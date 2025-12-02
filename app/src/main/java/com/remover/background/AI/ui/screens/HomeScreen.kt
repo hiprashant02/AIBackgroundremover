@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,10 +41,11 @@ import java.io.IOException
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onImageSelected: (Uri) -> Unit
+    onImageSelected: (Uri) -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val context = LocalContext.current
-    var showPermissionDialog by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -74,114 +77,116 @@ fun HomeScreen(
         }
     }
 
-    // Animation states
-    val infiniteTransition = rememberInfiniteTransition(label = "floating")
-    val floatingOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 20f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "floating"
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Primary.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.background
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // Subtle Background Decoration (Top Right Blob)
+        Box(
+            modifier = Modifier
+                .offset(x = 100.dp, y = (-100).dp)
+                .size(300.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Primary.copy(alpha = 0.15f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(24.dp)
         ) {
-            // Header
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 48.dp)
+            // Top Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // App Icon with animation
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .offset(y = floatingOffset.dp)
-                        .clip(CircleShape)
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(Primary, PrimaryDark)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoFixHigh,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 Text(
-                    text = "AI Background Remover",
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = "Studio",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    letterSpacing = 1.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                IconButton(
+                    onClick = onToggleTheme,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                        contentDescription = "Toggle Theme",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
+            Spacer(Modifier.weight(0.8f))
+
+            // Minimal Hero
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
                 Text(
-                    text = "Remove backgrounds instantly with AI",
+                    text = "Create\nMagic.",
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        letterSpacing = (-1).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    lineHeight = 56.sp
+                )
+                
+                Spacer(Modifier.height(16.dp))
+                
+                Text(
+                    text = "Turn your photos into masterpieces\nwith AI-powered editing.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    lineHeight = 24.sp
                 )
             }
 
-            // Action Buttons
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            Spacer(Modifier.weight(1f))
+
+            // Action Grid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Gallery Button
-                ActionButton(
+                // Gallery Card
+                DashboardCard(
+                    title = "Gallery",
+                    subtitle = "Import photo",
                     icon = Icons.Default.PhotoLibrary,
-                    title = "Choose from Gallery",
-                    subtitle = "Select photos to edit",
-                    gradient = Brush.horizontalGradient(
-                        colors = listOf(Primary, PrimaryLight)
-                    ),
                     onClick = {
                         imagePickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
 
-
-
-                // Camera Button
-                ActionButton(
+                // Camera Card
+                DashboardCard(
+                    title = "Camera",
+                    subtitle = "Take photo",
                     icon = Icons.Default.CameraAlt,
-                    title = "Take a Photo",
-                    subtitle = "Capture new image",
-                    gradient = Brush.horizontalGradient(
-                        colors = listOf(Secondary, SecondaryLight)
-                    ),
                     onClick = {
                         val permission = android.Manifest.permission.CAMERA
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -189,100 +194,87 @@ fun HomeScreen(
                         } else {
                             permissionLauncher.launch(permission)
                         }
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            // Features
-            Column(
-                modifier = Modifier.padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FeatureItem(
-                    icon = Icons.Default.Speed,
-                    text = "Fast AI Processing"
-                )
-                FeatureItem(
-                    icon = Icons.Default.OfflinePin,
-                    text = "Works Offline"
-                )
-                FeatureItem(
-                    icon = Icons.Default.HighQuality,
-                    text = "High Quality Results"
-                )
-            }
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun ActionButton(
-    icon: ImageVector,
+fun DashboardCard(
     title: String,
     subtitle: String,
-    gradient: Brush,
-    onClick: () -> Unit
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            stiffness = Spring.StiffnessMedium
         ),
         label = "scale"
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
+        modifier = modifier
+            .aspectRatio(0.85f) // Slightly taller than square
             .scale(scale)
             .clickable {
                 isPressed = true
                 onClick()
             },
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(32.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradient)
-                .padding(20.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            // Icon Bubble
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.3f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
-                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
-                Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
+            // Text
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -292,29 +284,6 @@ fun ActionButton(
             kotlinx.coroutines.delay(100)
             isPressed = false
         }
-    }
-}
-
-@Composable
-fun FeatureItem(
-    icon: ImageVector,
-    text: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 

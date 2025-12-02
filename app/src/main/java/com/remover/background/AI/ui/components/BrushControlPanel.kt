@@ -45,7 +45,7 @@ fun BrushControlPanel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF0A0A0A)) // Deep dark background
+            .background(MaterialTheme.colorScheme.surface) // Dynamic background
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .navigationBarsPadding() // Respect gesture bar
     ) {
@@ -59,7 +59,7 @@ fun BrushControlPanel(
         ) {
             // Cancel Button
             IconButton(onClick = onCancel) {
-                Icon(Icons.Default.Close, "Cancel", tint = Color.White)
+                Icon(Icons.Default.Close, "Cancel", tint = MaterialTheme.colorScheme.onSurface)
             }
 
             // Mode Indicator (Shows current mode, not toggleable)
@@ -93,7 +93,7 @@ fun BrushControlPanel(
                 )
                 Text(
                     if (brushTool.mode == BrushMode.ERASE) "Erase Mode" else "Restore Mode",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -106,7 +106,7 @@ fun BrushControlPanel(
                     .background(Primary, CircleShape)
                     .size(40.dp)
             ) {
-                Icon(Icons.Default.Check, "Done", tint = Color.White)
+                Icon(Icons.Default.Check, "Done", tint = Color.White) // Keep white on Primary button
             }
         }
 
@@ -198,12 +198,12 @@ private fun PropertyTab(
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isSelected) Color.White else Color.Gray
+            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             value,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isSelected) Primary else Color.Gray.copy(0.7f),
+            color = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(0.7f),
             fontWeight = FontWeight.Bold
         )
     }
@@ -220,9 +220,9 @@ private fun AestheticSlider(
         onValueChange = onValueChange,
         valueRange = valueRange,
         colors = SliderDefaults.colors(
-            thumbColor = Color.White,
+            thumbColor = MaterialTheme.colorScheme.onSurface,
             activeTrackColor = Primary,
-            inactiveTrackColor = Color(0xFF333333)
+            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
         ),
         modifier = Modifier.height(40.dp)
     )

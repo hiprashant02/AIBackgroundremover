@@ -306,7 +306,8 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val isManual = viewModel.isManualEditMode
     var showBgPicker by remember { mutableStateOf(false) }
     var showSaveSheet by remember { mutableStateOf(false) }
-
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    
     val customImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -328,7 +329,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // 1. IMAGE/CANVAS LAYER (Full Screen)
         Box(
@@ -569,12 +570,42 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             currentBackground = viewModel.currentBackground,
             onSave = { format ->
                 showSaveSheet = false
-                viewModel.saveBitmap(format) {
-                    Toast.makeText(context, "Image Saved to Gallery", Toast.LENGTH_SHORT).show()
+                viewModel.saveBitmap(format) { result ->
+                    if (result.isSuccess) {
+                        showSuccessDialog = true
+                    } else {
+                        Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             onDismiss = { showSaveSheet = false }
         )
+    }
+
+    if (showSuccessDialog) {
+        SaveSuccessDialog(
+            onEditNewImage = {
+                showSuccessDialog = false
+                onBackClick() // This resets VM and goes back to Home
+            },
+            onDismiss = { showSuccessDialog = false }
+        )
+    }
+
+    if (viewModel.isSaving) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = false) {},
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = Primary)
+                Spacer(Modifier.height(16.dp))
+                Text("Saving to Gallery...", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
@@ -596,14 +627,14 @@ fun EditorMenuItem(
         if (isProcessing) {
             CircularProgressIndicator(
                 modifier = Modifier.size(22.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 2.dp
             )
         } else {
             Icon(
                 icon,
                 contentDescription = label,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.White,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(22.dp) // Reduced Icon Size
             )
         }
@@ -613,7 +644,7 @@ fun EditorMenuItem(
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -668,8 +699,8 @@ fun BackgroundPickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF1E1E1E),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.Gray) }
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant) }
     ) {
         if (currentView != PickerView.Main) {
             // ... (Detail Views: Custom Color, Gradient, etc.)
@@ -693,7 +724,7 @@ fun BackgroundPickerSheet(
                             PickerView.GradientEndColor -> currentView = PickerView.CustomGradient
                         }
                     }) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
                     }
                     
                     Text(
@@ -705,7 +736,7 @@ fun BackgroundPickerSheet(
                             else -> ""
                         },
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -778,7 +809,7 @@ fun BackgroundPickerSheet(
                 ScrollableTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                     edgePadding = 16.dp,
                     indicator = { tabPositions ->
                         if (selectedTab < tabPositions.size) {
@@ -790,7 +821,7 @@ fun BackgroundPickerSheet(
                         }
                     },
                     divider = {
-                        HorizontalDivider(color = Color.White.copy(0.1f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f))
                     }
                 ) {
                     tabs.forEachIndexed { index, title ->
@@ -801,7 +832,7 @@ fun BackgroundPickerSheet(
                                 Text(
                                     title, 
                                     fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTab == index) Color.White else Color.Gray
+                                    color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                 ) 
                             }
                         )
@@ -861,7 +892,7 @@ fun ColorsGrid(
                     )
                     .then(
                         if (isCustomSelected) Modifier.border(2.dp, Primary, CircleShape)
-                        else Modifier.border(1.dp, Color.White.copy(0.1f), CircleShape)
+                        else Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f), CircleShape)
                     )
                     .clickable { onPickCustomColor() },
                 contentAlignment = Alignment.Center
@@ -933,7 +964,7 @@ fun GradientsGrid(
                     .background(Brush.linearGradient(listOf(Color.Blue, Color.Cyan)))
                     .then(
                         if (isCustomSelected) Modifier.border(2.dp, Primary, CircleShape)
-                        else Modifier.border(1.dp, Color.White.copy(0.1f), CircleShape)
+                        else Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f), CircleShape)
                     )
                     .clickable { onPickCustomGradient() },
                 contentAlignment = Alignment.Center
@@ -994,8 +1025,8 @@ fun ImagesGrid(
             aspectRatio = 1f,
             modifier = Modifier.weight(1f)
         ) {
-            Box(Modifier.fillMaxSize().background(Color(0xFF2A2A2A)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Add, null, tint = Color.White)
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -1021,7 +1052,7 @@ fun BlurControl(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
     }
     
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Blur Intensity", color = Color.Gray, modifier = Modifier.padding(bottom = 16.dp))
+        Text("Blur Intensity", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 16.dp))
         
         Slider(
             value = sliderValue,
@@ -1052,7 +1083,7 @@ fun SelectionItem(
                 .clickable(onClick = onClick)
                 .then(
                     if (isSelected) Modifier.border(2.dp, Primary, RoundedCornerShape(12.dp))
-                    else Modifier.border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(12.dp))
+                    else Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f), RoundedCornerShape(12.dp))
                 )
         ) {
             content()
@@ -1076,7 +1107,7 @@ fun SelectionItem(
         }
         if (label != null) {
             Spacer(Modifier.height(8.dp))
-            Text(label, color = if (isSelected) Primary else Color.Gray, style = MaterialTheme.typography.labelSmall)
+            Text(label, color = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
         }
     }
 }

@@ -7,6 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -23,7 +27,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            AIBackgroundRemoverTheme {
+            // Theme State
+            var isDarkTheme by remember { mutableStateOf(true) } // Default to Dark
+
+            AIBackgroundRemoverTheme(darkTheme = isDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -43,7 +50,9 @@ class MainActivity : ComponentActivity() {
                                 onImageSelected = { uri ->
                                     viewModel.loadImage(this@MainActivity, uri)
                                     navController.navigate("editor")
-                                }
+                                },
+                                isDarkTheme = isDarkTheme,
+                                onToggleTheme = { isDarkTheme = !isDarkTheme }
                             )
                         }
 

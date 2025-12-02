@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.*
@@ -33,8 +34,8 @@ fun SaveOptionsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1E1E1E),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.Gray) }
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant) }
     ) {
         Column(
             modifier = Modifier
@@ -46,7 +47,7 @@ fun SaveOptionsSheet(
             Text(
                 "Save Image",
                 style = MaterialTheme.typography.headlineSmall,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
 
@@ -54,15 +55,17 @@ fun SaveOptionsSheet(
                 if (isImageBackground) "Image background detected. Saving as high-quality JPG."
                 else "Choose a format to save your image:",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            val isTransparent = currentBackground is BackgroundType.Transparent
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // PNG Option (Only for non-image backgrounds)
-                if (!isImageBackground) {
+                // PNG Option (Only for transparent backgrounds)
+                if (isTransparent) {
                     SaveFormatOption(
                         title = "PNG",
                         subtitle = "Transparent Background",
@@ -76,9 +79,9 @@ fun SaveOptionsSheet(
                 // JPG Option
                 SaveFormatOption(
                     title = "JPG",
-                    subtitle = if (isImageBackground) "Full Quality" else "White Background",
+                    subtitle = if (isTransparent) "White Background" else "Full Quality",
                     icon = Icons.Default.Photo,
-                    isSelected = isImageBackground, 
+                    isSelected = !isTransparent, 
                     onClick = { onSave(Bitmap.CompressFormat.JPEG) },
                     modifier = Modifier.weight(1f)
                 )
@@ -101,7 +104,7 @@ fun SaveFormatOption(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isSelected) Primary.copy(alpha = 0.1f) else Color(0xFF2A2A2A))
+            .background(if (isSelected) Primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant)
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
                 color = if (isSelected) Primary else Color.Transparent,
@@ -115,20 +118,73 @@ fun SaveFormatOption(
         Icon(
             icon,
             contentDescription = null,
-            tint = if (isSelected) Primary else Color.Gray,
+            tint = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(32.dp)
         )
         Text(
             title,
             style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         Text(
             subtitle,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
+}
+
+@Composable
+fun SaveSuccessDialog(
+    onEditNewImage: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = Primary,
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        title = {
+            Text(
+                "Image Saved!",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        },
+        text = {
+            Text(
+                "Your image has been successfully saved to your gallery.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onEditNewImage,
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Edit New Image")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Keep Editing")
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
