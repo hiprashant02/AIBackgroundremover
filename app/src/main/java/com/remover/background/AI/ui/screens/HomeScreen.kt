@@ -158,11 +158,80 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // About Button (positioned below top bar, right side)
+                // Review, Share, About buttons (positioned below top bar, right side)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Review Button
+                    IconButton(
+                        onClick = {
+                            val packageName = context.packageName
+                            try {
+                                // Try to open Play Store app
+                                context.startActivity(
+                                    android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse("market://details?id=$packageName")
+                                    )
+                                )
+                            } catch (e: android.content.ActivityNotFoundException) {
+                                // Fall back to browser
+                                context.startActivity(
+                                    android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                                    )
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = stringResource(R.string.rate_app),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Share Button
+                    IconButton(
+                        onClick = {
+                            val packageName = context.packageName
+                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, context.getString(R.string.app_name))
+                                putExtra(
+                                    android.content.Intent.EXTRA_TEXT,
+                                    context.getString(R.string.share_message) + 
+                                    "\nhttps://play.google.com/store/apps/details?id=$packageName"
+                                )
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.share_app)))
+                        },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_app),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // About Button
                     IconButton(
                         onClick = onAboutClick,
                         modifier = Modifier

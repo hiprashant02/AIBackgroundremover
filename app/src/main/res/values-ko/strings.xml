@@ -131,4 +131,9 @@
     <string name="email_us">피드백 보내기</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">개인정보 보호정책</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">평가</string>
+    <string name="share_app">공유</string>
+    <string name="share_message">AI Background Remover를 확인하세요 - 몇 초 만에 사진 배경을 제거!</string>
 </resources>

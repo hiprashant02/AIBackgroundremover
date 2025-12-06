@@ -131,5 +131,10 @@
     <string name="email_us">发送反馈</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">隐私政策</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">评分</string>
+    <string name="share_app">分享</string>
+    <string name="share_message">看看AI Background Remover - 几秒钟内移除照片背景！</string>
 </resources>
 

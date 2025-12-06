@@ -131,4 +131,9 @@
     <string name="email_us">フィードバックを送信</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">プライバシーポリシー</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">評価</string>
+    <string name="share_app">共有</string>
+    <string name="share_message">AI Background Removerをチェック - 数秒で写真の背景を削除！</string>
 </resources>

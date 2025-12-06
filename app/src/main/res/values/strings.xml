@@ -131,4 +131,9 @@
     <string name="email_us">Send feedback</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">Privacy Policy</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">Rate App</string>
+    <string name="share_app">Share App</string>
+    <string name="share_message">Check out AI Background Remover - Remove backgrounds from photos in seconds!</string>
 </resources>

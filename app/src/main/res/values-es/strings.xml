@@ -131,5 +131,10 @@
     <string name="email_us">Enviar comentarios</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">Política de Privacidad</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">Calificar</string>
+    <string name="share_app">Compartir</string>
+    <string name="share_message">¡Mira AI Background Remover - Elimina fondos de fotos en segundos!</string>
 </resources>
 

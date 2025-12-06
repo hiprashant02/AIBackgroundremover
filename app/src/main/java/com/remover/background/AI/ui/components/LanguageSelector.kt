@@ -42,8 +42,11 @@ fun LanguageSelector(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedLanguage = SUPPORTED_LANGUAGES.find { it.code == currentLanguage } 
-        ?: SUPPORTED_LANGUAGES.first()
+    // Use remember with key to update when currentLanguage changes
+    val selectedLanguage = remember(currentLanguage) {
+        SUPPORTED_LANGUAGES.find { it.code == currentLanguage } 
+            ?: SUPPORTED_LANGUAGES.first()
+    }
 
     Box(modifier = modifier) {
         // Language button

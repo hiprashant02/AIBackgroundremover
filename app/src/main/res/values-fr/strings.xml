@@ -131,5 +131,10 @@
     <string name="email_us">Envoyer des commentaires</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">Politique de Confidentialité</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">Noter</string>
+    <string name="share_app">Partager</string>
+    <string name="share_message">Découvrez AI Background Remover - Supprimez les arrière-plans en quelques secondes!</string>
 </resources>
 

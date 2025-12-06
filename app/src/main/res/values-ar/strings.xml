@@ -131,4 +131,9 @@
     <string name="email_us">إرسال ملاحظات</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">تقييم</string>
+    <string name="share_app">مشاركة</string>
+    <string name="share_message">تحقق من AI Background Remover - أزل خلفيات الصور في ثوانٍ!</string>
 </resources>

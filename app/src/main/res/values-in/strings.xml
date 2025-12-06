@@ -131,4 +131,9 @@
     <string name="email_us">Kirim umpan balik</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">Kebijakan Privasi</string>
+    
+    <!-- Rate and Share -->
+    <string name="rate_app">Beri Rating</string>
+    <string name="share_app">Bagikan</string>
+    <string name="share_message">Lihat AI Background Remover - Hapus latar belakang foto dalam hitungan detik!</string>
 </resources>
