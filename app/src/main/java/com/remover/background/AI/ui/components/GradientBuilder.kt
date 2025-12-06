@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.remover.background.AI.R
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -99,19 +101,19 @@ fun GradientBuilder(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ColorCircle(color = startColor, label = "Start", onClick = onStartColorClick)
+            ColorCircle(color = startColor, label = stringResource(R.string.gradient_start_color), onClick = onStartColorClick)
             
             IconButton(onClick = onSwapColors) {
                 Icon(Icons.Default.SwapHoriz, contentDescription = "Swap", tint = MaterialTheme.colorScheme.onSurface)
             }
             
-            ColorCircle(color = endColor, label = "End", onClick = onEndColorClick)
+            ColorCircle(color = endColor, label = stringResource(R.string.gradient_end_color), onClick = onEndColorClick)
         }
         
         Spacer(modifier = Modifier.height(24.dp))
         
         // Angle Slider
-        Text("Angle: ${angle.toInt()}°", color = MaterialTheme.colorScheme.onSurface)
+        Text(stringResource(R.string.gradient_angle_value, angle.toInt()), color = MaterialTheme.colorScheme.onSurface)
         Slider(
             value = angle,
             onValueChange = onAngleChange,

@@ -17,7 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.remover.background.AI.R
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.ui.theme.Primary
 
@@ -45,7 +47,7 @@ fun SaveOptionsSheet(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
-                "Save Image",
+                stringResource(R.string.save_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
@@ -67,8 +69,8 @@ fun SaveOptionsSheet(
                 // PNG Option (Only for transparent backgrounds)
                 if (isTransparent) {
                     SaveFormatOption(
-                        title = "PNG",
-                        subtitle = "Transparent Background",
+                        title = stringResource(R.string.save_format_png),
+                        subtitle = stringResource(R.string.save_format_png_desc),
                         icon = Icons.Default.Image,
                         isSelected = false,
                         onClick = { onSave(Bitmap.CompressFormat.PNG) },
@@ -78,8 +80,8 @@ fun SaveOptionsSheet(
 
                 // JPG Option
                 SaveFormatOption(
-                    title = "JPG",
-                    subtitle = if (isTransparent) "White Background" else "Full Quality",
+                    title = stringResource(R.string.save_format_jpg),
+                    subtitle = if (isTransparent) stringResource(R.string.save_format_jpg_desc_transparent) else stringResource(R.string.save_format_jpg_desc_full_quality),
                     icon = Icons.Default.Photo,
                     isSelected = !isTransparent, 
                     onClick = { onSave(Bitmap.CompressFormat.JPEG) },
@@ -153,7 +155,7 @@ fun SaveSuccessDialog(
         },
         title = {
             Text(
-                "Image Saved!",
+                text = stringResource(R.string.save_success_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -161,7 +163,7 @@ fun SaveSuccessDialog(
         },
         text = {
             Text(
-                "Your image has been successfully saved to your gallery.",
+                text = stringResource(R.string.save_success_message),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -172,7 +174,7 @@ fun SaveSuccessDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = Primary),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Edit New Image")
+                Text(stringResource(R.string.btn_edit_new))
             }
         },
         dismissButton = {
@@ -180,7 +182,7 @@ fun SaveSuccessDialog(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Keep Editing")
+                Text(stringResource(R.string.btn_keep_editing))
             }
         },
         containerColor = MaterialTheme.colorScheme.surface,

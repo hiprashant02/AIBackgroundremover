@@ -18,8 +18,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.remover.background.AI.R
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.model.BrushTool
 import com.remover.background.AI.ui.theme.Primary
@@ -119,21 +121,21 @@ fun BrushControlPanel(
         ) {
             PropertyTab(
                 icon = Icons.Default.Circle,
-                label = "Size",
+                label = stringResource(R.string.brush_size),
                 value = "${brushTool.size.toInt()}",
                 isSelected = activeProperty == BrushProperty.SIZE,
                 onClick = { activeProperty = BrushProperty.SIZE }
             )
             PropertyTab(
                 icon = Icons.Default.BlurOn,
-                label = "Hardness",
+                label = stringResource(R.string.brush_hardness),
                 value = "${(brushTool.hardness * 100).toInt()}%",
                 isSelected = activeProperty == BrushProperty.HARDNESS,
                 onClick = { activeProperty = BrushProperty.HARDNESS }
             )
             PropertyTab(
                 icon = Icons.Default.Opacity,
-                label = "Opacity",
+                label = stringResource(R.string.brush_opacity),
                 value = "${(brushTool.opacity * 100).toInt()}%",
                 isSelected = activeProperty == BrushProperty.OPACITY,
                 onClick = { activeProperty = BrushProperty.OPACITY }

@@ -1,3 +1,134 @@
 <resources>
     <string name="app_name">AI Background remover</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">Create\nMagic.</string>
+    <string name="hero_subtitle">Turn your photos into masterpieces\nwith AI-powered editing.</string>
+    <string name="action_gallery_title">Gallery</string>
+    <string name="action_gallery_subtitle">Import photo</string>
+    <string name="action_camera_title">Camera</string>
+    <string name="action_camera_subtitle">Take photo</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">Undo</string>
+    <string name="menu_redo">Redo</string>
+    <string name="menu_reset">Reset</string>
+    <string name="menu_save">Save</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">Background</string>
+    <string name="menu_transform">Transform</string>
+    <string name="menu_manual_edit">Manual Edit</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">Erase</string>
+    <string name="manual_mode_restore">Restore</string>
+    <string name="manual_apply">Apply</string>
+    <string name="manual_cancel">Cancel</string>
+    <string name="manual_clear">Clear</string>
+    <string name="manual_smooth">Smooth</string>
+    <string name="brush_size">Size</string>
+    <string name="brush_hardness">Hardness</string>
+    <string name="brush_opacity">Opacity</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">Pinch to zoom, drag to move, rotate with two fingers</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">Colors</string>
+    <string name="tab_gradients">Gradients</string>
+    <string name="tab_images">Images</string>
+    <string name="tab_blur">Blur</string>
+    <string name="custom_color">Custom</string>
+    <string name="custom_gradient">Custom</string>
+    <string name="transparent">Transparent</string>
+    <string name="original">Original</string>
+    <string name="blur_intensity">Blur Intensity</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">Hex Code</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">Start Color</string>
+    <string name="gradient_end_color">End Color</string>
+    <string name="gradient_angle">Angle</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">Save Image</string>
+    <string name="save_format">Choose Format</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">Smaller file size</string>
+    <string name="save_format_jpg_desc_transparent">White Background</string>
+    <string name="save_format_jpg_desc_full_quality">Full Quality</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">Supports transparency</string>
+    <string name="btn_save">Save to Gallery</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">Image Saved!</string>
+    <string name="save_success_message">Your edited image has been saved to the gallery.</string>
+    <string name="btn_edit_new">Edit New Image</string>
+    <string name="btn_keep_editing">Keep Editing</string>
+    <string name="btn_view_image">View Image</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">Discard Changes?</string>
+    <string name="exit_confirm_message">You have unsaved changes. Are you sure you want to leave? All changes will be lost.</string>
+    <string name="btn_leave">Leave</string>
+    <string name="btn_stay">Stay</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">Saving to Gallery…</string>
+    <string name="processing_message">Processing…</string>
+    <string name="loading_message">Loading image…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">Failed to load image</string>
+    <string name="error_save_failed">Failed to save image</string>
+    <string name="error_camera_permission">Camera permission required</string>
+    <string name="error_background_removal">Failed background removal</string>
+    <string name="error_generic">Error: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">Toggle Theme</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">Back</string>
+    <string name="cd_theme_toggle">Toggle dark/light theme</string>
+    <string name="cd_app_icon">App icon</string>
+    <string name="cd_gallery_icon">Gallery</string>
+    <string name="cd_camera_icon">Camera</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">A new version is available! Tap to update.</string>
+    <string name="update_ready">An update is ready to install!</string>
+    <string name="btn_update">Update</string>
+    <string name="btn_install">Install</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">About</string>
+    <string name="back">Back</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">Quality without compromise</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">Developer</string>
+    <string name="about_us_description">LittiChokha is an independent development platform designed with precision and purpose. It delivers robust, thoughtfully engineered features at no cost, supported only by unobtrusive ads. With a strong commitment to quality and strict privacy standards, LittiChokha provides a clean, reliable, and user-focused experience.</string>
+    <string name="developed_by">Developed by Prashant Kumar</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">About this app</string>
+    <string name="about_app_description">AI Background Remover uses an on-device ML algorithm to create accurate cutouts. All processing happens locally on your phone, so no internet is required and nothing is ever sent to any server. Everything is done entirely offline, keeping your photos 100% private while providing a smooth, secure experience. Perfect for portraits, product photos, and quick creative edits.</string>
+    <string name="app_version">Version 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">Contact</string>
+    <string name="email_us">Send feedback</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">Privacy Policy</string>
 </resources>

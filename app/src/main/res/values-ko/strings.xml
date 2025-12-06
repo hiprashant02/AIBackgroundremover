@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">AI 배경 제거기</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">마법을\n만들어요.</string>
+    <string name="hero_subtitle">AI 기반 편집으로\n사진을 걸작으로 변환하세요.</string>
+    <string name="action_gallery_title">갤러리</string>
+    <string name="action_gallery_subtitle">사진 가져오기</string>
+    <string name="action_camera_title">카메라</string>
+    <string name="action_camera_subtitle">사진 촬영</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">실행 취소</string>
+    <string name="menu_redo">다시 실행</string>
+    <string name="menu_reset">초기화</string>
+    <string name="menu_save">저장</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">배경</string>
+    <string name="menu_transform">변형</string>
+    <string name="menu_manual_edit">수동 편집</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">지우기</string>
+    <string name="manual_mode_restore">복원</string>
+    <string name="manual_apply">적용</string>
+    <string name="manual_cancel">취소</string>
+    <string name="manual_clear">지우기</string>
+    <string name="manual_smooth">부드럽게</string>
+    <string name="brush_size">크기</string>
+    <string name="brush_hardness">경도</string>
+    <string name="brush_opacity">불투명도</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">핀치로 확대/축소, 드래그로 이동, 두 손가락으로 회전</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">색상</string>
+    <string name="tab_gradients">그라데이션</string>
+    <string name="tab_images">이미지</string>
+    <string name="tab_blur">블러</string>
+    <string name="custom_color">사용자 정의</string>
+    <string name="custom_gradient">사용자 정의</string>
+    <string name="transparent">투명</string>
+    <string name="original">원본</string>
+    <string name="blur_intensity">블러 강도</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">16진수 코드</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">시작 색상</string>
+    <string name="gradient_end_color">끝 색상</string>
+    <string name="gradient_angle">각도</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">이미지 저장</string>
+    <string name="save_format">형식 선택</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">더 작은 파일 크기</string>
+    <string name="save_format_jpg_desc_transparent">흰색 배경</string>
+    <string name="save_format_jpg_desc_full_quality">최고 품질</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">투명도 지원</string>
+    <string name="btn_save">갤러리에 저장</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">이미지 저장됨!</string>
+    <string name="save_success_message">편집된 이미지가 갤러리에 저장되었습니다.</string>
+    <string name="btn_edit_new">새 이미지 편집</string>
+    <string name="btn_keep_editing">계속 편집</string>
+    <string name="btn_view_image">이미지 보기</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">변경사항을 취소하시겠습니까?</string>
+    <string name="exit_confirm_message">저장되지 않은 변경사항이 있습니다. 정말 나가시겠습니까? 모든 변경사항이 손실됩니다.</string>
+    <string name="btn_leave">나가기</string>
+    <string name="btn_stay">머물기</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">갤러리에 저장 중…</string>
+    <string name="processing_message">처리 중…</string>
+    <string name="loading_message">이미지 로딩 중…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">이미지 로드 실패</string>
+    <string name="error_save_failed">이미지 저장 실패</string>
+    <string name="error_camera_permission">카메라 권한 필요</string>
+    <string name="error_background_removal">배경 제거 실패</string>
+    <string name="error_generic">오류: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">테마 전환</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">뒤로</string>
+    <string name="cd_theme_toggle">다크/라이트 테마 전환</string>
+    <string name="cd_app_icon">앱 아이콘</string>
+    <string name="cd_gallery_icon">갤러리</string>
+    <string name="cd_camera_icon">카메라</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">새 버전이 있습니다! 탭하여 업데이트하세요.</string>
+    <string name="update_ready">업데이트할 준비가 되었습니다!</string>
+    <string name="btn_update">업데이트</string>
+    <string name="btn_install">설치</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">정보</string>
+    <string name="back">뒤로</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">타협 없는 품질</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">개발자</string>
+    <string name="about_us_description">LittiChokha는 정밀함과 목적을 가지고 설계된 독립 개발 플랫폼입니다. 눈에 띄지 않는 광고만으로 지원되는 강력하고 신중하게 설계된 기능을 무료로 제공합니다. 품질과 엄격한 개인정보 보호 기준에 대한 강한 헌신으로, LittiChokha는 깨끗하고 신뢰할 수 있는 사용자 중심의 경험을 제공합니다.</string>
+    <string name="developed_by">Prashant Kumar 개발</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">이 앱에 대해</string>
+    <string name="about_app_description">AI Background Remover는 기기 내 ML 알고리즘을 사용하여 정확한 컷아웃을 만듭니다. 모든 처리는 휴대폰에서 로컬로 수행되므로 인터넷이 필요하지 않으며 서버로 아무것도 전송되지 않습니다. 모든 것이 완전히 오프라인으로 수행되어 사진을 100% 비공개로 유지합니다. 인물 사진, 제품 사진 및 빠른 창의적 편집에 적합합니다.</string>
+    <string name="app_version">버전 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">연락처</string>
+    <string name="email_us">피드백 보내기</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">개인정보 보호정책</string>
+</resources>

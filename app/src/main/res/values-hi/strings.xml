@@ -1,0 +1,135 @@
+<resources>
+    <string name="app_name">AI Background remover</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">जादू\nबनाएं।</string>
+    <string name="hero_subtitle">AI-संचालित संपादन के साथ\nअपनी तस्वीरों को उत्कृष्ट कृतियों में बदलें।</string>
+    <string name="action_gallery_title">गैलरी</string>
+    <string name="action_gallery_subtitle">फोटो आयात करें</string>
+    <string name="action_camera_title">कैमरा</string>
+    <string name="action_camera_subtitle">फोटो लें</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">पूर्ववत करें</string>
+    <string name="menu_redo">फिर से करें</string>
+    <string name="menu_reset">रीसेट करें</string>
+    <string name="menu_save">सहेजें</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">पृष्ठभूमि</string>
+    <string name="menu_transform">रूपांतरण</string>
+    <string name="menu_manual_edit">मैनुअल संपादन</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">मिटाएं</string>
+    <string name="manual_mode_restore">पुनर्स्थापित करें</string>
+    <string name="manual_apply">लागू करें</string>
+    <string name="manual_cancel">रद्द करें</string>
+    <string name="manual_clear">साफ करें</string>
+    <string name="manual_smooth">चिकना करें</string>
+    <string name="brush_size">आकार</string>
+    <string name="brush_hardness">कठोरता</string>
+    <string name="brush_opacity">अपारदर्शिता</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">ज़ूम करने के लिए पिंच करें, घुमाने के लिए दो उंगलियों का उपयोग करें</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">रंग</string>
+    <string name="tab_gradients">ग्रेडिएंट</string>
+    <string name="tab_images">चित्र</string>
+    <string name="tab_blur">धुंधला</string>
+    <string name="custom_color">कस्टम</string>
+    <string name="custom_gradient">कस्टम</string>
+    <string name="transparent">पारदर्शी</string>
+    <string name="original">मूल</string>
+    <string name="blur_intensity">धुंधलापन तीव्रता</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">हेक्स कोड</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">प्रारंभ रंग</string>
+    <string name="gradient_end_color">अंत रंग</string>
+    <string name="gradient_angle">कोण</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">चित्र सहेजें</string>
+    <string name="save_format">प्रारूप चुनें</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">छोटा फ़ाइल आकार</string>
+    <string name="save_format_jpg_desc_transparent">सफेद पृष्ठभूमि</string>
+    <string name="save_format_jpg_desc_full_quality">पूर्ण गुणवत्ता</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">पारदर्शिता का समर्थन करता है</string>
+    <string name="btn_save">गैलरी में सहेजें</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">चित्र सहेजा गया!</string>
+    <string name="save_success_message">आपकी संपादित छवि गैलरी में सहेजी गई है।</string>
+    <string name="btn_edit_new">नई छवि संपादित करें</string>
+    <string name="btn_keep_editing">संपादन जारी रखें</string>
+    <string name="btn_view_image">छवि देखें</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">परिवर्तन त्यागें?</string>
+    <string name="exit_confirm_message">आपके पास असहेजे परिवर्तन हैं। क्या आप वाकई जाना चाहते हैं? सभी परिवर्तन खो जाएंगे।</string>
+    <string name="btn_leave">छोड़ें</string>
+    <string name="btn_stay">रहें</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">गैलरी में सहेजा जा रहा है…</string>
+    <string name="processing_message">प्रसंस्करण हो रहा है…</string>
+    <string name="loading_message">छवि लोड हो रही है…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">छवि लोड करने में विफल</string>
+    <string name="error_save_failed">छवि सहेजने में विफल</string>
+    <string name="error_camera_permission">कैमरा अनुमति आवश्यक है</string>
+    <string name="error_background_removal">पृष्ठभूमि हटाना विफल</string>
+    <string name="error_generic">त्रुटि: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">थीम टॉगल करें</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">वापस</string>
+    <string name="cd_theme_toggle">डार्क/लाइट थीम टॉगल करें</string>
+    <string name="cd_app_icon">ऐप आइकन</string>
+    <string name="cd_gallery_icon">गैलरी</string>
+    <string name="cd_camera_icon">कैमरा</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">एक नया संस्करण उपलब्ध है! अपडेट करने के लिए टैप करें।</string>
+    <string name="update_ready">एक अपडेट इंस्टॉल करने के लिए तैयार है!</string>
+    <string name="btn_update">अपडेट करें</string>
+    <string name="btn_install">इंस्टॉल करें</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">परिचय</string>
+    <string name="back">वापस</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">गुणवत्ता में कोई समझौता नहीं</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">डेवलपर</string>
+    <string name="about_us_description">LittiChokha एक स्वतंत्र विकास प्लेटफ़ॉर्म है जिसे सटीकता और उद्देश्य के साथ डिज़ाइन किया गया है। यह बिना किसी लागत के मजबूत और सोच-समझकर बनाई गई सुविधाएं प्रदान करता है, जो केवल विनीत विज्ञापनों द्वारा समर्थित है। गुणवत्ता और सख्त गोपनीयता मानकों के प्रति मजबूत प्रतिबद्धता के साथ, LittiChokha एक साफ, विश्वसनीय और उपयोगकर्ता-केंद्रित अनुभव प्रदान करता है।</string>
+    <string name="developed_by">प्रशांत कुमार द्वारा विकसित</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">इस ऐप के बारे में</string>
+    <string name="about_app_description">AI Background Remover सटीक कटआउट बनाने के लिए ऑन-डिवाइस ML एल्गोरिथम का उपयोग करता है। सभी प्रोसेसिंग आपके फोन पर स्थानीय रूप से होती है, इसलिए इंटरनेट की आवश्यकता नहीं है और कुछ भी किसी सर्वर पर नहीं भेजा जाता। सब कुछ पूरी तरह से ऑफलाइन किया जाता है, जिससे आपकी तस्वीरें 100% निजी रहती हैं। पोर्ट्रेट, प्रोडक्ट फोटो और त्वरित क्रिएटिव एडिट के लिए बिल्कुल सही।</string>
+    <string name="app_version">संस्करण 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">संपर्क</string>
+    <string name="email_us">प्रतिक्रिया भेजें</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+</resources>
+

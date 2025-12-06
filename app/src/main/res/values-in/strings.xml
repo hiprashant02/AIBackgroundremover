@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">Penghapus Latar Belakang AI</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">Ciptakan\nKeajaiban.</string>
+    <string name="hero_subtitle">Ubah foto Anda menjadi mahakarya\ndengan pengeditan bertenaga AI.</string>
+    <string name="action_gallery_title">Galeri</string>
+    <string name="action_gallery_subtitle">Impor foto</string>
+    <string name="action_camera_title">Kamera</string>
+    <string name="action_camera_subtitle">Ambil foto</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">Urungkan</string>
+    <string name="menu_redo">Ulangi</string>
+    <string name="menu_reset">Atur Ulang</string>
+    <string name="menu_save">Simpan</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">Latar Belakang</string>
+    <string name="menu_transform">Transformasi</string>
+    <string name="menu_manual_edit">Edit Manual</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">Hapus</string>
+    <string name="manual_mode_restore">Pulihkan</string>
+    <string name="manual_apply">Terapkan</string>
+    <string name="manual_cancel">Batal</string>
+    <string name="manual_clear">Bersihkan</string>
+    <string name="manual_smooth">Haluskan</string>
+    <string name="brush_size">Ukuran</string>
+    <string name="brush_hardness">Kekerasan</string>
+    <string name="brush_opacity">Opasitas</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">Cubit untuk zoom, seret untuk memindahkan, putar dengan dua jari</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">Warna</string>
+    <string name="tab_gradients">Gradien</string>
+    <string name="tab_images">Gambar</string>
+    <string name="tab_blur">Blur</string>
+    <string name="custom_color">Kustom</string>
+    <string name="custom_gradient">Kustom</string>
+    <string name="transparent">Transparan</string>
+    <string name="original">Asli</string>
+    <string name="blur_intensity">Intensitas Blur</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">Kode Hex</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">Warna Awal</string>
+    <string name="gradient_end_color">Warna Akhir</string>
+    <string name="gradient_angle">Sudut</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">Simpan Gambar</string>
+    <string name="save_format">Pilih Format</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">Ukuran file lebih kecil</string>
+    <string name="save_format_jpg_desc_transparent">Latar Belakang Putih</string>
+    <string name="save_format_jpg_desc_full_quality">Kualitas Penuh</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">Mendukung transparansi</string>
+    <string name="btn_save">Simpan ke Galeri</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">Gambar Tersimpan!</string>
+    <string name="save_success_message">Gambar yang diedit telah disimpan ke galeri.</string>
+    <string name="btn_edit_new">Edit Gambar Baru</string>
+    <string name="btn_keep_editing">Lanjutkan Mengedit</string>
+    <string name="btn_view_image">Lihat Gambar</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">Buang Perubahan?</string>
+    <string name="exit_confirm_message">Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Semua perubahan akan hilang.</string>
+    <string name="btn_leave">Keluar</string>
+    <string name="btn_stay">Tetap</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">Menyimpan ke Galeri…</string>
+    <string name="processing_message">Memproses…</string>
+    <string name="loading_message">Memuat gambar…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">Gagal memuat gambar</string>
+    <string name="error_save_failed">Gagal menyimpan gambar</string>
+    <string name="error_camera_permission">Izin kamera diperlukan</string>
+    <string name="error_background_removal">Penghapusan latar belakang gagal</string>
+    <string name="error_generic">Kesalahan: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">Ganti Tema</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">Kembali</string>
+    <string name="cd_theme_toggle">Ganti tema gelap/terang</string>
+    <string name="cd_app_icon">Ikon aplikasi</string>
+    <string name="cd_gallery_icon">Galeri</string>
+    <string name="cd_camera_icon">Kamera</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">Versi baru tersedia! Ketuk untuk memperbarui.</string>
+    <string name="update_ready">Pembaruan siap diinstal!</string>
+    <string name="btn_update">Perbarui</string>
+    <string name="btn_install">Instal</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">Tentang</string>
+    <string name="back">Kembali</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">Kualitas tanpa kompromi</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">Pengembang</string>
+    <string name="about_us_description">LittiChokha adalah platform pengembangan independen yang dirancang dengan presisi dan tujuan. Menyediakan fitur yang kuat dan dirancang dengan cermat tanpa biaya, didukung hanya oleh iklan yang tidak mengganggu. Dengan komitmen kuat terhadap kualitas dan standar privasi yang ketat, LittiChokha memberikan pengalaman yang bersih, andal, dan berfokus pada pengguna.</string>
+    <string name="developed_by">Dikembangkan oleh Prashant Kumar</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">Tentang aplikasi ini</string>
+    <string name="about_app_description">AI Background Remover menggunakan algoritma ML di perangkat untuk membuat potongan yang akurat. Semua pemrosesan terjadi secara lokal di ponsel Anda, jadi tidak diperlukan internet dan tidak ada yang dikirim ke server mana pun. Semuanya dilakukan sepenuhnya offline, menjaga foto Anda 100% pribadi. Sempurna untuk potret, foto produk, dan pengeditan kreatif cepat.</string>
+    <string name="app_version">Versi 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">Kontak</string>
+    <string name="email_us">Kirim umpan balik</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">Kebijakan Privasi</string>
+</resources>

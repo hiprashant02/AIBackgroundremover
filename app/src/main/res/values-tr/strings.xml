@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">AI Arka Plan Kaldırıcı</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">Sihir\nYarat.</string>
+    <string name="hero_subtitle">Yapay zeka destekli düzenleme ile\nfotoğraflarınızı başyapıtlara dönüştürün.</string>
+    <string name="action_gallery_title">Galeri</string>
+    <string name="action_gallery_subtitle">Fotoğraf içe aktar</string>
+    <string name="action_camera_title">Kamera</string>
+    <string name="action_camera_subtitle">Fotoğraf çek</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">Geri Al</string>
+    <string name="menu_redo">Yinele</string>
+    <string name="menu_reset">Sıfırla</string>
+    <string name="menu_save">Kaydet</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">Arka Plan</string>
+    <string name="menu_transform">Dönüştür</string>
+    <string name="menu_manual_edit">Manuel Düzenleme</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">Sil</string>
+    <string name="manual_mode_restore">Geri Yükle</string>
+    <string name="manual_apply">Uygula</string>
+    <string name="manual_cancel">İptal</string>
+    <string name="manual_clear">Temizle</string>
+    <string name="manual_smooth">Yumuşat</string>
+    <string name="brush_size">Boyut</string>
+    <string name="brush_hardness">Sertlik</string>
+    <string name="brush_opacity">Opaklık</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">Yakınlaştırmak için kısalt, taşımak için sürükle, iki parmakla döndür</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">Renkler</string>
+    <string name="tab_gradients">Gradyanlar</string>
+    <string name="tab_images">Resimler</string>
+    <string name="tab_blur">Bulanıklık</string>
+    <string name="custom_color">Özel</string>
+    <string name="custom_gradient">Özel</string>
+    <string name="transparent">Şeffaf</string>
+    <string name="original">Orijinal</string>
+    <string name="blur_intensity">Bulanıklık Yoğunluğu</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">Hex Kodu</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">Başlangıç Rengi</string>
+    <string name="gradient_end_color">Bitiş Rengi</string>
+    <string name="gradient_angle">Açı</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">Resmi Kaydet</string>
+    <string name="save_format">Format Seç</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">Daha küçük dosya boyutu</string>
+    <string name="save_format_jpg_desc_transparent">Beyaz Arka Plan</string>
+    <string name="save_format_jpg_desc_full_quality">Tam Kalite</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">Şeffaflığı destekler</string>
+    <string name="btn_save">Galeriye Kaydet</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">Resim Kaydedildi!</string>
+    <string name="save_success_message">Düzenlenmiş resminiz galeriye kaydedildi.</string>
+    <string name="btn_edit_new">Yeni Resim Düzenle</string>
+    <string name="btn_keep_editing">Düzenlemeye Devam Et</string>
+    <string name="btn_view_image">Resmi Görüntüle</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">Değişiklikler İptal Edilsin mi?</string>
+    <string name="exit_confirm_message">Kaydedilmemiş değişiklikleriniz var. Çıkmak istediğinizden emin misiniz? Tüm değişiklikler kaybolacak.</string>
+    <string name="btn_leave">Çık</string>
+    <string name="btn_stay">Kal</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">Galeriye Kaydediliyor…</string>
+    <string name="processing_message">İşleniyor…</string>
+    <string name="loading_message">Resim yükleniyor…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">Resim yüklenemedi</string>
+    <string name="error_save_failed">Resim kaydedilemedi</string>
+    <string name="error_camera_permission">Kamera izni gerekli</string>
+    <string name="error_background_removal">Arka plan kaldırma başarısız</string>
+    <string name="error_generic">Hata: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">Tema Değiştir</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">Geri</string>
+    <string name="cd_theme_toggle">Koyu/açık tema değiştir</string>
+    <string name="cd_app_icon">Uygulama simgesi</string>
+    <string name="cd_gallery_icon">Galeri</string>
+    <string name="cd_camera_icon">Kamera</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">Yeni sürüm mevcut! Güncellemek için dokunun.</string>
+    <string name="update_ready">Güncelleme yüklenmeye hazır!</string>
+    <string name="btn_update">Güncelle</string>
+    <string name="btn_install">Yükle</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">Hakkında</string>
+    <string name="back">Geri</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">Ödünsüz kalite</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">Geliştirici</string>
+    <string name="about_us_description">LittiChokha, hassasiyet ve amaçla tasarlanmış bağımsız bir geliştirme platformudur. Yalnızca göze batmayan reklamlarla desteklenen sağlam, özenle tasarlanmış özellikleri ücretsiz sunar. Kalite ve sıkı gizlilik standartlarına güçlü bir bağlılıkla, LittiChokha temiz, güvenilir ve kullanıcı odaklı bir deneyim sunar.</string>
+    <string name="developed_by">Prashant Kumar tarafından geliştirildi</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">Bu uygulama hakkında</string>
+    <string name="about_app_description">AI Background Remover, doğru kesimler oluşturmak için cihaz üzerinde ML algoritması kullanır. Tüm işlemler telefonunuzda yerel olarak gerçekleşir, bu nedenle internet gerekmez ve hiçbir şey sunucuya gönderilmez. Her şey tamamen çevrimdışı yapılır, fotoğraflarınızı %100 gizli tutar. Portreler, ürün fotoğrafları ve hızlı yaratıcı düzenlemeler için mükemmel.</string>
+    <string name="app_version">Sürüm 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">İletişim</string>
+    <string name="email_us">Geri bildirim gönder</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">Gizlilik Politikası</string>
+</resources>

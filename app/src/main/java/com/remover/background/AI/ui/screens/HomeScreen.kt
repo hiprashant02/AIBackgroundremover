@@ -26,12 +26,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.remover.background.AI.R
 import com.remover.background.AI.ui.theme.*
+import com.remover.background.AI.ui.components.LanguageSelector
+import com.remover.background.AI.ui.components.BannerAd
 
 import androidx.compose.ui.platform.LocalContext
 import java.io.File
@@ -43,7 +46,10 @@ import java.io.IOException
 fun HomeScreen(
     onImageSelected: (Uri) -> Unit,
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    currentLanguage: String,
+    onLanguageSelected: (String) -> Unit,
+    onAboutClick: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -58,7 +64,8 @@ fun HomeScreen(
     ) { bitmap ->
         if (bitmap != null) {
             try {
-                val file = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
+                val file =
+                    File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
                 val stream = FileOutputStream(file)
                 bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, stream)
                 stream.close()
@@ -102,104 +109,154 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(24.dp)
         ) {
-            // Top Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 24.dp)
             ) {
-                Text(
-                    text = "Studio",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    letterSpacing = 1.sp
-                )
-
-                IconButton(
-                    onClick = onToggleTheme,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .size(40.dp)
+                // Top Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                        contentDescription = "Toggle Theme",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
+                    Text(
+                        text = stringResource(R.string.studio_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        letterSpacing = 1.sp
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Language Selector
+                        LanguageSelector(
+                            currentLanguage = currentLanguage,
+                            onLanguageSelected = onLanguageSelected
+                        )
+
+                        // Theme Toggle
+                        IconButton(
+                            onClick = onToggleTheme,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = stringResource(R.string.theme_toggle_desc),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // About Button (positioned below top bar, right side)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        onClick = onAboutClick,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = stringResource(R.string.about_developer_title),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.weight(0.8f))
+
+                // Minimal Hero
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = stringResource(R.string.hero_title),
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Normal,
+                            letterSpacing = (-1).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        lineHeight = 56.sp
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(R.string.hero_subtitle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 24.sp
                     )
                 }
-            }
 
-            Spacer(Modifier.weight(0.8f))
+                Spacer(Modifier.weight(1f))
 
-            // Minimal Hero
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = "Create\nMagic.",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Normal,
-                        letterSpacing = (-1).sp
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    lineHeight = 56.sp
-                )
-                
+                // Action Grid
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Gallery Card
+                    DashboardCard(
+                        title = stringResource(R.string.action_gallery_title),
+                        subtitle = stringResource(R.string.action_gallery_subtitle),
+                        icon = Icons.Default.PhotoLibrary,
+                        onClick = {
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Camera Card
+                    DashboardCard(
+                        title = stringResource(R.string.action_camera_title),
+                        subtitle = stringResource(R.string.action_camera_subtitle),
+                        icon = Icons.Default.CameraAlt,
+                        onClick = {
+                            val permission = android.Manifest.permission.CAMERA
+                            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                    context,
+                                    permission
+                                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            ) {
+                                cameraLauncher.launch(null)
+                            } else {
+                                permissionLauncher.launch(permission)
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 Spacer(Modifier.height(16.dp))
-                
-                Text(
-                    text = "Turn your photos into masterpieces\nwith AI-powered editing.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 24.sp
-                )
             }
-
-            Spacer(Modifier.weight(1f))
-
-            // Action Grid
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Gallery Card
-                DashboardCard(
-                    title = "Gallery",
-                    subtitle = "Import photo",
-                    icon = Icons.Default.PhotoLibrary,
-                    onClick = {
-                        imagePickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Camera Card
-                DashboardCard(
-                    title = "Camera",
-                    subtitle = "Take photo",
-                    icon = Icons.Default.CameraAlt,
-                    onClick = {
-                        val permission = android.Manifest.permission.CAMERA
-                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                            cameraLauncher.launch(null)
-                        } else {
-                            permissionLauncher.launch(permission)
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
+            
+            // Single Banner Ad at the bottom
+            BannerAd(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .navigationBarsPadding()
+            )
         }
     }
 }

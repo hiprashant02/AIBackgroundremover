@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">AI背景リムーバー</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">マジックを\n作成。</string>
+    <string name="hero_subtitle">AI搭載の編集で\n写真を傑作に変えましょう。</string>
+    <string name="action_gallery_title">ギャラリー</string>
+    <string name="action_gallery_subtitle">写真をインポート</string>
+    <string name="action_camera_title">カメラ</string>
+    <string name="action_camera_subtitle">写真を撮る</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">元に戻す</string>
+    <string name="menu_redo">やり直す</string>
+    <string name="menu_reset">リセット</string>
+    <string name="menu_save">保存</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">背景</string>
+    <string name="menu_transform">変形</string>
+    <string name="menu_manual_edit">手動編集</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">消去</string>
+    <string name="manual_mode_restore">復元</string>
+    <string name="manual_apply">適用</string>
+    <string name="manual_cancel">キャンセル</string>
+    <string name="manual_clear">クリア</string>
+    <string name="manual_smooth">スムーズ</string>
+    <string name="brush_size">サイズ</string>
+    <string name="brush_hardness">硬さ</string>
+    <string name="brush_opacity">不透明度</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">ピンチでズーム、ドラッグで移動、二本指で回転</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">カラー</string>
+    <string name="tab_gradients">グラデーション</string>
+    <string name="tab_images">画像</string>
+    <string name="tab_blur">ぼかし</string>
+    <string name="custom_color">カスタム</string>
+    <string name="custom_gradient">カスタム</string>
+    <string name="transparent">透明</string>
+    <string name="original">オリジナル</string>
+    <string name="blur_intensity">ぼかし強度</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">16進コード</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">開始色</string>
+    <string name="gradient_end_color">終了色</string>
+    <string name="gradient_angle">角度</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">画像を保存</string>
+    <string name="save_format">フォーマットを選択</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">ファイルサイズが小さい</string>
+    <string name="save_format_jpg_desc_transparent">白い背景</string>
+    <string name="save_format_jpg_desc_full_quality">フル品質</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">透明度をサポート</string>
+    <string name="btn_save">ギャラリーに保存</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">画像を保存しました！</string>
+    <string name="save_success_message">編集した画像がギャラリーに保存されました。</string>
+    <string name="btn_edit_new">新しい画像を編集</string>
+    <string name="btn_keep_editing">編集を続ける</string>
+    <string name="btn_view_image">画像を表示</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">変更を破棄しますか？</string>
+    <string name="exit_confirm_message">保存されていない変更があります。本当に終了しますか？すべての変更が失われます。</string>
+    <string name="btn_leave">終了</string>
+    <string name="btn_stay">戻る</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">ギャラリーに保存中…</string>
+    <string name="processing_message">処理中…</string>
+    <string name="loading_message">画像を読み込み中…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">画像の読み込みに失敗しました</string>
+    <string name="error_save_failed">画像の保存に失敗しました</string>
+    <string name="error_camera_permission">カメラの許可が必要です</string>
+    <string name="error_background_removal">背景の削除に失敗しました</string>
+    <string name="error_generic">エラー: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">テーマ切り替え</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">戻る</string>
+    <string name="cd_theme_toggle">ダーク/ライトテーマを切り替え</string>
+    <string name="cd_app_icon">アプリアイコン</string>
+    <string name="cd_gallery_icon">ギャラリー</string>
+    <string name="cd_camera_icon">カメラ</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">新しいバージョンが利用可能です！タップして更新。</string>
+    <string name="update_ready">アップデートの準備ができました！</string>
+    <string name="btn_update">更新</string>
+    <string name="btn_install">インストール</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">概要</string>
+    <string name="back">戻る</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">妥協のない品質</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">開発者</string>
+    <string name="about_us_description">LittiChokhaは、精度と目的を持って設計された独立した開発プラットフォームです。控えめな広告のみでサポートされた、堅牢で思慮深く設計された機能を無料で提供します。品質と厳格なプライバシー基準への強いコミットメントにより、LittiChokhaはクリーンで信頼性が高く、ユーザー中心の体験を提供します。</string>
+    <string name="developed_by">Prashant Kumar開発</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">このアプリについて</string>
+    <string name="about_app_description">AI Background Removerは、デバイス上のMLアルゴリズムを使用して正確な切り抜きを作成します。すべての処理はお使いの電話でローカルに行われるため、インターネットは不要で、サーバーには何も送信されません。すべてが完全にオフラインで行われ、写真を100%プライベートに保ちます。ポートレート、製品写真、クイック編集に最適です。</string>
+    <string name="app_version">バージョン 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">連絡先</string>
+    <string name="email_us">フィードバックを送信</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">プライバシーポリシー</string>
+</resources>

@@ -1,0 +1,135 @@
+<resources>
+    <string name="app_name">AI Background remover</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">创造\n魔法。</string>
+    <string name="hero_subtitle">使用AI驱动的编辑\n将您的照片变成杰作。</string>
+    <string name="action_gallery_title">图库</string>
+    <string name="action_gallery_subtitle">导入照片</string>
+    <string name="action_camera_title">相机</string>
+    <string name="action_camera_subtitle">拍照</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">撤销</string>
+    <string name="menu_redo">重做</string>
+    <string name="menu_reset">重置</string>
+    <string name="menu_save">保存</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">背景</string>
+    <string name="menu_transform">变换</string>
+    <string name="menu_manual_edit">手动编辑</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">擦除</string>
+    <string name="manual_mode_restore">恢复</string>
+    <string name="manual_apply">应用</string>
+    <string name="manual_cancel">取消</string>
+    <string name="manual_clear">清除</string>
+    <string name="manual_smooth">平滑</string>
+    <string name="brush_size">大小</string>
+    <string name="brush_hardness">硬度</string>
+    <string name="brush_opacity">不透明度</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">捏合缩放，拖动移动，双指旋转</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">颜色</string>
+    <string name="tab_gradients">渐变</string>
+    <string name="tab_images">图片</string>
+    <string name="tab_blur">模糊</string>
+    <string name="custom_color">自定义</string>
+    <string name="custom_gradient">自定义</string>
+    <string name="transparent">透明</string>
+    <string name="original">原始</string>
+    <string name="blur_intensity">模糊强度</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">十六进制代码</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">起始颜色</string>
+    <string name="gradient_end_color">结束颜色</string>
+    <string name="gradient_angle">角度</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">保存图片</string>
+    <string name="save_format">选择格式</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">文件更小</string>
+    <string name="save_format_jpg_desc_transparent">白色背景</string>
+    <string name="save_format_jpg_desc_full_quality">完整质量</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">支持透明度</string>
+    <string name="btn_save">保存到图库</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">图片已保存！</string>
+    <string name="save_success_message">您编辑的图片已保存到图库。</string>
+    <string name="btn_edit_new">编辑新图片</string>
+    <string name="btn_keep_editing">继续编辑</string>
+    <string name="btn_view_image">查看图片</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">放弃更改？</string>
+    <string name="exit_confirm_message">您有未保存的更改。确定要离开吗？所有更改将丢失。</string>
+    <string name="btn_leave">离开</string>
+    <string name="btn_stay">留下</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">正在保存到图库…</string>
+    <string name="processing_message">正在处理…</string>
+    <string name="loading_message">正在加载图片…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">加载图片失败</string>
+    <string name="error_save_failed">保存图片失败</string>
+    <string name="error_camera_permission">需要相机权限</string>
+    <string name="error_background_removal">背景移除失败</string>
+    <string name="error_generic">错误：%s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">切换主题</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">返回</string>
+    <string name="cd_theme_toggle">切换深色/浅色主题</string>
+    <string name="cd_app_icon">应用图标</string>
+    <string name="cd_gallery_icon">图库</string>
+    <string name="cd_camera_icon">相机</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">新版本可用！点击更新。</string>
+    <string name="update_ready">更新已准备好安装！</string>
+    <string name="btn_update">更新</string>
+    <string name="btn_install">安装</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">关于</string>
+    <string name="back">返回</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">品质永不妥协</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">开发者</string>
+    <string name="about_us_description">LittiChokha是一个独立的开发平台，以精确和目的设计。它提供强大、精心设计的功能，完全免费，仅由不显眼的广告支持。凭借对质量和严格隐私标准的坚定承诺，LittiChokha提供干净、可靠和以用户为中心的体验。</string>
+    <string name="developed_by">由Prashant Kumar开发</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">关于此应用</string>
+    <string name="about_app_description">AI Background Remover使用设备上的ML算法创建精确的抠图。所有处理都在您的手机上本地进行，因此不需要互联网，也不会向任何服务器发送任何内容。一切都完全离线完成，使您的照片保持100%私密。非常适合人像、产品照片和快速创意编辑。</string>
+    <string name="app_version">版本 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">联系方式</string>
+    <string name="email_us">发送反馈</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">隐私政策</string>
+</resources>
+

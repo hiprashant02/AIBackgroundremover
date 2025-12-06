@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">مزيل الخلفية بالذكاء الاصطناعي</string>
+    
+    <!-- Home Screen -->
+    <string name="studio_title">Littichokha Studio</string>
+    <string name="hero_title">اصنع\nالسحر.</string>
+    <string name="hero_subtitle">حوّل صورك إلى روائع\nبالتحرير بالذكاء الاصطناعي.</string>
+    <string name="action_gallery_title">المعرض</string>
+    <string name="action_gallery_subtitle">استيراد صورة</string>
+    <string name="action_camera_title">الكاميرا</string>
+    <string name="action_camera_subtitle">التقاط صورة</string>
+    
+    <!-- Editor Screen - Top Menu -->
+    <string name="menu_undo">تراجع</string>
+    <string name="menu_redo">إعادة</string>
+    <string name="menu_reset">إعادة تعيين</string>
+    <string name="menu_save">حفظ</string>
+    
+    <!-- Editor Screen - Bottom Menu -->
+    <string name="menu_background">الخلفية</string>
+    <string name="menu_transform">تحويل</string>
+    <string name="menu_manual_edit">تحرير يدوي</string>
+    
+    <!-- Manual Edit Mode -->
+    <string name="manual_mode_erase">مسح</string>
+    <string name="manual_mode_restore">استعادة</string>
+    <string name="manual_apply">تطبيق</string>
+    <string name="manual_cancel">إلغاء</string>
+    <string name="manual_clear">مسح</string>
+    <string name="manual_smooth">تنعيم</string>
+    <string name="brush_size">الحجم</string>
+    <string name="brush_hardness">الصلابة</string>
+    <string name="brush_opacity">العتامة</string>
+    
+    <!-- Transform Mode -->
+    <string name="transform_hint">اضغط للتكبير، اسحب للتحريك، دوّر بإصبعين</string>
+    
+    <!-- Background Picker -->
+    <string name="tab_colors">الألوان</string>
+    <string name="tab_gradients">التدرجات</string>
+    <string name="tab_images">الصور</string>
+    <string name="tab_blur">ضبابية</string>
+    <string name="custom_color">مخصص</string>
+    <string name="custom_gradient">مخصص</string>
+    <string name="transparent">شفاف</string>
+    <string name="original">الأصلي</string>
+    <string name="blur_intensity">شدة الضبابية</string>
+    
+    <!-- Color Picker -->
+    <string name="hex_code">كود سداسي</string>
+    <string name="hex_hint">#RRGGBB</string>
+    
+    <!-- Gradient Builder -->
+    <string name="gradient_start_color">لون البداية</string>
+    <string name="gradient_end_color">لون النهاية</string>
+    <string name="gradient_angle">الزاوية</string>
+    <string name="gradient_angle_value">%d°</string>
+    
+    <!-- Save Options -->
+    <string name="save_title">حفظ الصورة</string>
+    <string name="save_format">اختر التنسيق</string>
+    <string name="save_format_jpg">JPG</string>
+    <string name="save_format_jpg_desc">حجم ملف أصغر</string>
+    <string name="save_format_jpg_desc_transparent">خلفية بيضاء</string>
+    <string name="save_format_jpg_desc_full_quality">جودة كاملة</string>
+    <string name="save_format_png">PNG</string>
+    <string name="save_format_png_desc">يدعم الشفافية</string>
+    <string name="btn_save">حفظ في المعرض</string>
+    
+    <!-- Save Success Dialog -->
+    <string name="save_success_title">تم حفظ الصورة!</string>
+    <string name="save_success_message">تم حفظ صورتك المعدلة في المعرض.</string>
+    <string name="btn_edit_new">تحرير صورة جديدة</string>
+    <string name="btn_keep_editing">متابعة التحرير</string>
+    <string name="btn_view_image">عرض الصورة</string>
+    
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_confirm_title">تجاهل التغييرات؟</string>
+    <string name="exit_confirm_message">لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟ ستفقد جميع التغييرات.</string>
+    <string name="btn_leave">مغادرة</string>
+    <string name="btn_stay">البقاء</string>
+    
+    <!-- Processing Messages -->
+    <string name="saving_message">جارٍ الحفظ في المعرض…</string>
+    <string name="processing_message">جارٍ المعالجة…</string>
+    <string name="loading_message">جارٍ تحميل الصورة…</string>
+    
+    <!-- Error Messages -->
+    <string name="error_load_failed">فشل تحميل الصورة</string>
+    <string name="error_save_failed">فشل حفظ الصورة</string>
+    <string name="error_camera_permission">مطلوب إذن الكاميرا</string>
+    <string name="error_background_removal">فشل إزالة الخلفية</string>
+    <string name="error_generic">خطأ: %s</string>
+    
+    <!-- Theme Toggle -->
+    <string name="theme_toggle_desc">تبديل السمة</string>
+    
+    <!-- Content Descriptions (Accessibility) -->
+    <string name="cd_back_button">رجوع</string>
+    <string name="cd_theme_toggle">تبديل السمة الداكنة/الفاتحة</string>
+    <string name="cd_app_icon">أيقونة التطبيق</string>
+    <string name="cd_gallery_icon">المعرض</string>
+    <string name="cd_camera_icon">الكاميرا</string>
+    
+    <!-- In-App Update -->
+    <string name="update_available">إصدار جديد متاح! انقر للتحديث.</string>
+    <string name="update_ready">التحديث جاهز للتثبيت!</string>
+    <string name="btn_update">تحديث</string>
+    <string name="btn_install">تثبيت</string>
+    
+    <!-- About Page -->
+    <string name="about_developer_title">حول</string>
+    <string name="back">رجوع</string>
+    
+    <!-- Studio Header -->
+    <string name="studio_name">Littichokha Studio</string>
+    <string name="studio_tagline">جودة بدون تنازلات</string>
+    
+    <!-- About Us Section -->
+    <string name="about_us_title">المطور</string>
+    <string name="about_us_description">LittiChokha هي منصة تطوير مستقلة مصممة بدقة وهدف. تقدم ميزات قوية ومصممة بعناية مجاناً، مدعومة فقط بإعلانات غير مزعجة. مع التزام قوي بالجودة ومعايير الخصوصية الصارمة، توفر LittiChokha تجربة نظيفة وموثوقة تركز على المستخدم.</string>
+    <string name="developed_by">تطوير Prashant Kumar</string>
+    
+    <!-- About This App Section -->
+    <string name="about_app_title">حول هذا التطبيق</string>
+    <string name="about_app_description">يستخدم AI Background Remover خوارزمية تعلم آلي على الجهاز لإنشاء قصات دقيقة. تتم جميع المعالجة محلياً على هاتفك، لذلك لا حاجة للإنترنت ولا يتم إرسال أي شيء إلى أي خادم. يتم كل شيء دون اتصال تماماً، مما يحافظ على خصوصية صورك 100%. مثالي للصور الشخصية وصور المنتجات والتحريرات الإبداعية السريعة.</string>
+    <string name="app_version">الإصدار 1.0.0</string>
+    
+    <!-- Contact Section -->
+    <string name="contact_title">اتصل بنا</string>
+    <string name="email_us">إرسال ملاحظات</string>
+    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+</resources>

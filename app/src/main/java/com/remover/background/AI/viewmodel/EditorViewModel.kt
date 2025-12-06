@@ -21,6 +21,9 @@ import com.remover.background.AI.model.DrawingPath
 import com.remover.background.AI.utils.FileManager
 import com.remover.background.AI.utils.ImageProcessor
 import com.remover.background.AI.utils.ManualEditingProcessor
+import com.remover.background.AI.utils.InAppReviewManager
+import com.remover.background.AI.utils.InterstitialAdManager
+import android.app.Activity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -76,6 +79,9 @@ class EditorViewModel : ViewModel() {
     private var processor: BackgroundRemovalProcessor? = null
     private val imageProcessor = ImageProcessor()
     private var fileManager: FileManager? = null
+    private var reviewManager: InAppReviewManager? = null
+    private var interstitialAdManager: InterstitialAdManager? = null
+    private var activityRef: Activity? = null
     private val manualEditingProcessor = ManualEditingProcessor()
     var useDirectForeground by mutableStateOf(true)
         private set
@@ -93,17 +99,38 @@ class EditorViewModel : ViewModel() {
     private var savedDisplayBitmapBeforeManualEdit: Bitmap? = null
     private var savedBackgroundBeforeManualEdit: BackgroundType? = null
 
+    // UI State (survives configuration changes)
+    var showBgPicker by mutableStateOf(false)
+        internal set
+    var showSaveSheet by mutableStateOf(false)
+        internal set
+    var showSuccessDialog by mutableStateOf(false)
+        internal set
+    var showExitConfirmDialog by mutableStateOf(false)
+        internal set
 
     // ... Standard Initialization and Load Logic (Unchanged) ...
     fun initialize(context: Context) {
         if (processor == null) {
             processor = BackgroundRemovalProcessor(context)
             fileManager = FileManager(context)
+            reviewManager = InAppReviewManager(context)
+            interstitialAdManager = InterstitialAdManager(context)
+            // Store activity reference if context is an Activity
+            if (context is Activity) {
+                activityRef = context
+            }
+            
+            // Preload interstitial ad for better UX
+            interstitialAdManager?.preloadAd()
         }
     }
 
     fun loadImage(context: Context, uri: Uri) {
         viewModelScope.launch {
+            // Reset all states first to ensure clean slate for new session
+            resetStatesSync()
+            
             editorState = EditorState.Loading
             isProcessing = true
             try {
@@ -124,6 +151,44 @@ class EditorViewModel : ViewModel() {
                 isProcessing = false
             }
         }
+    }
+    
+    // Synchronous reset for use within coroutines
+    private fun resetStatesSync() {
+        // Reset image state
+        originalBitmap = null
+        foregroundBitmap = null
+        maskBitmap = null
+        editableMask = null
+        currentBackground = BackgroundType.Transparent
+        blurredBackgroundBitmap = null
+        
+        // Reset transform state
+        subjectScale = 1f
+        subjectPosition = Offset.Zero
+        subjectRotation = 0f
+        
+        // Reset manual edit state
+        isManualEditMode = false
+        brushStrokes.clear()
+        savedForegroundBeforeManualEdit = null
+        savedDisplayBitmapBeforeManualEdit = null
+        savedBackgroundBeforeManualEdit = null
+        
+        // Reset undo/redo
+        undoStack.clear()
+        redoStack.clear()
+        updateUndoRedoState()
+        
+        // Reset UI states
+        showBgPicker = false
+        showSaveSheet = false
+        showSuccessDialog = false
+        showExitConfirmDialog = false
+        
+        // Reset processing flags
+        isProcessing = false
+        isSaving = false
     }
 
     private suspend fun processBackground(bitmap: Bitmap) {
@@ -218,6 +283,19 @@ class EditorViewModel : ViewModel() {
                     
                     if (result != null) {
                         onComplete(result)
+                        
+                        // Show interstitial ad and request review after successful save
+                        if (result.isSuccess) {
+                            activityRef?.let { activity ->
+                                // Show interstitial ad first
+                                interstitialAdManager?.showAd(activity) {
+                                    // After ad is dismissed (or not shown), request review
+                                    viewModelScope.launch {
+                                        reviewManager?.requestReviewIfEligible(activity)
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         onComplete(Result.failure(Exception("FileManager not initialized")))
                     }
@@ -229,6 +307,20 @@ class EditorViewModel : ViewModel() {
                         val result = fileManager?.saveBitmapToGallery(bitmap, fileName, format)
                         if (result != null) {
                             onComplete(result)
+                            
+                            // Show interstitial ad and request review after successful save
+                            if (result.isSuccess) {
+                                activityRef?.let { activity ->
+                                    // Show interstitial ad first
+                                    interstitialAdManager?.showAd(activity) {
+                                        // After ad is dismissed (or not shown), request review
+viewModelScope.launch {
+    reviewManager?.requestReviewIfEligible(activity)
+
+}
+                                    }
+                                }
+                            }
                         } else {
                             onComplete(Result.failure(Exception("FileManager not initialized")))
                         }
@@ -613,15 +705,8 @@ class EditorViewModel : ViewModel() {
     
     fun reset() {
         viewModelScope.launch {
-            originalBitmap = null
-            foregroundBitmap = null
-            maskBitmap = null
-            editableMask = null
-            currentBackground = BackgroundType.Transparent
+            resetStatesSync()
             editorState = EditorState.Idle
-            undoStack.clear()
-            redoStack.clear()
-            updateUndoRedoState()
         }
     }
 }

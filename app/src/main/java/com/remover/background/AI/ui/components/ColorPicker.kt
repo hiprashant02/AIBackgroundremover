@@ -19,7 +19,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.remover.background.AI.R
 
 @Composable
 fun ColorPicker(
@@ -120,7 +122,8 @@ fun ColorPicker(
                     }
                 },
                 modifier = Modifier.weight(1f),
-                label = { Text("Hex Code") },
+                label = { Text(stringResource(R.string.hex_code)) },
+                placeholder = { Text(stringResource(R.string.hex_hint)) },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,

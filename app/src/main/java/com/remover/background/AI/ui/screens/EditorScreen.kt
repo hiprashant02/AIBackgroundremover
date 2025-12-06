@@ -51,7 +51,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.remover.background.AI.R
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.ui.components.BrushControlPanel
@@ -61,6 +63,7 @@ import com.remover.background.AI.viewmodel.EditorState
 import com.remover.background.AI.viewmodel.EditorViewModel
 import com.remover.background.AI.ui.components.ColorPicker
 import com.remover.background.AI.ui.components.GradientBuilder
+import com.remover.background.AI.ui.components.BannerAd
 import kotlinx.coroutines.delay
 
 
@@ -136,7 +139,7 @@ fun ZoomableBox(
                                 val viewPoint = (down.position - Offset(offsetX, offsetY)) / scale
                                 // 2. Untranslate Centering Offset
                                 val imagePoint = viewPoint - Offset(imageOffsetX, imageOffsetY)
-                                
+
                                 isSubjectInteraction = viewModel.isSubjectHit(imagePoint)
                             }
                         }
@@ -193,7 +196,7 @@ fun CheckerboardBackground(modifier: Modifier = Modifier) {
             for (col in 0..numCols) {
                 val isLightSquare = (row + col) % 2 == 0
                 drawRect(
-                    color = if (isLightSquare) Color(0xFF2A2A2A) else Color(0xFF1A1A1A),
+                    color = if (isLightSquare) Color(0xFFFFFFFF) else Color(0xFFE0E0E0), // White-Grey
                     topLeft = Offset(col * squareSize, row * squareSize),
                     size = Size(squareSize, squareSize)
                 )
@@ -299,14 +302,23 @@ fun BackgroundLayer(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     val context = LocalContext.current
     val editorState = viewModel.editorState
     val isManual = viewModel.isManualEditMode
-    var showBgPicker by remember { mutableStateOf(false) }
-    var showSaveSheet by remember { mutableStateOf(false) }
-    var showSuccessDialog by remember { mutableStateOf(false) }
+    
+    // Use ViewModel states instead of local remember
+    val showBgPicker = viewModel.showBgPicker
+    val showSaveSheet = viewModel.showSaveSheet
+    val showSuccessDialog = viewModel.showSuccessDialog
+    val showExitConfirmDialog = viewModel.showExitConfirmDialog
+    
+    // Handle back button press
+    androidx.activity.compose.BackHandler {
+        viewModel.showExitConfirmDialog = true
+    }
     
     val customImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -318,7 +330,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                 inputStream?.close()
                 if (bitmap != null) {
                     viewModel.applyBackground(BackgroundType.CustomImage(bitmap))
-                    showBgPicker = false
+                    viewModel.showBgPicker = false
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -326,179 +338,180 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // 1. IMAGE/CANVAS LAYER (Full Screen)
-        Box(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { viewModel.showExitConfirmDialog = true }, // Show dialog instead of direct back
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .border(1.dp, Color.White.copy(0.1f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+                    }
+                },
+                actions = {
+                    if (isManual) {
+                        // Undo/Redo Group
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(Color.Black.copy(alpha = 0.6f))
+                                .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(50))
+                                .padding(horizontal = 4.dp, vertical = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = { viewModel.undo() },
+                                enabled = viewModel.canUndo
+                            ) {
+                                Icon(
+                                    Icons.Default.Undo,
+                                    "Undo",
+                                    tint = if (viewModel.canUndo) Color.White else Color.White.copy(0.3f)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .width(1.dp)
+                                    .height(24.dp)
+                                    .background(Color.White.copy(0.1f))
+                                    .align(Alignment.CenterVertically)
+                            )
+                            IconButton(
+                                onClick = { viewModel.redo() },
+                                enabled = viewModel.canRedo
+                            ) {
+                                Icon(
+                                    Icons.Default.Redo,
+                                    "Redo",
+                                    tint = if (viewModel.canRedo) Color.White else Color.White.copy(0.3f)
+                                )
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                viewModel.showSaveSheet = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text(stringResource(R.string.menu_save), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 110.dp) // Avoid Top Bar overlap
-                .padding(bottom = if (isManual) 280.dp else 130.dp), // Reduced padding for slimmer menu
-            contentAlignment = Alignment.Center
+                .padding(paddingValues)
         ) {
-            if (editorState is EditorState.Success) {
-                // Container with solid pure black background
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = RoundedCornerShape(16.dp),
-                            clip = false
-                        )
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black) // Pure black - no checkerboard possible
-                        .border(
-                            width = 2.dp,
-                            color = Color.White.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                )
-
-
-                // Display the image - background including checkerboard is already composited into bitmap
-                if (isManual) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        if (viewModel.currentBackground is BackgroundType.Transparent) {
-                            CheckerboardBackground(modifier = Modifier.fillMaxSize())
-                        }
-                        DrawingCanvas(
-                            bitmap = editorState.bitmap,
-                            brushTool = viewModel.currentBrushTool,
-                            isEnabled = !viewModel.isProcessing,
-                            onDrawingPath = { viewModel.addBrushStroke(it) },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                } else {
-                    ZoomableBox(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        viewModel = viewModel
-                    ) {
-                        // Background
-                        BackgroundLayer(
-                            backgroundType = viewModel.currentBackground,
-                            originalBitmap = viewModel.originalBitmap,
-                            blurredBitmap = viewModel.blurredBackgroundBitmap,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        
-                        // Foreground (Subject)
-                        val fg = viewModel.foregroundBitmap
-                        if (fg != null) {
-                            Image(
-                                bitmap = fg.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer(
-                                        scaleX = viewModel.subjectScale,
-                                        scaleY = viewModel.subjectScale,
-                                        rotationZ = viewModel.subjectRotation,
-                                        translationX = viewModel.subjectPosition.x * viewModel.displayScaleFactor,
-                                        translationY = viewModel.subjectPosition.y * viewModel.displayScaleFactor
-                                    ),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                    }
-                }
-            }
-            
-            if (viewModel.isProcessing) {
-                CircularProgressIndicator(
-                    color = Primary,
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-        }
-
-        // 2. TOP BAR (Floating)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onBackClick,
+            Box(
                 modifier = Modifier
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .border(1.dp, Color.White.copy(0.1f), CircleShape)
+                    .fillMaxSize()
+                    .weight(1f) // Take remaining space
+                    .background(MaterialTheme.colorScheme.background).animateContentSize()
             ) {
-                Icon(Icons.Default.ArrowBack, null, tint = Color.White)
-            }
-
-            if (isManual) {
-                // Undo/Redo Group
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(50))
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                // 1. IMAGE/CANVAS LAYER
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = { viewModel.undo() },
-                        enabled = viewModel.canUndo
-                    ) {
-                        Icon(
-                            Icons.Default.Undo,
-                            "Undo",
-                            tint = if (viewModel.canUndo) Color.White else Color.White.copy(0.3f)
+                    if (editorState is EditorState.Success) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    clip = false
+                                )
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.Black) // Pure black - no checkerboard possible
+                                .border(
+                                    width = 2.dp,
+                                    color = Color.White.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(16.dp)
+                                ).animateContentSize()
                         )
+
+
+                        // Display the image - background including checkerboard is already composited into bitmap
+                        if (isManual) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                if (viewModel.currentBackground is BackgroundType.Transparent) {
+                                    CheckerboardBackground(modifier = Modifier.fillMaxSize())
+                                }
+                                DrawingCanvas(
+                                    bitmap = editorState.bitmap,
+                                    brushTool = viewModel.currentBrushTool,
+                                    isEnabled = !viewModel.isProcessing,
+                                    onDrawingPath = { viewModel.addBrushStroke(it) },
+                                    modifier = Modifier.fillMaxSize().animateContentSize()
+                                )
+                            }
+                        } else {
+                            ZoomableBox(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                viewModel = viewModel
+                            ) {
+                                // Background
+                                BackgroundLayer(
+                                    backgroundType = viewModel.currentBackground,
+                                    originalBitmap = viewModel.originalBitmap,
+                                    blurredBitmap = viewModel.blurredBackgroundBitmap,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                // Foreground (Subject)
+                                val fg = viewModel.foregroundBitmap
+                                if (fg != null) {
+                                    Image(
+                                        bitmap = fg.asImageBitmap(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .graphicsLayer(
+                                                scaleX = viewModel.subjectScale,
+                                                scaleY = viewModel.subjectScale,
+                                                rotationZ = viewModel.subjectRotation,
+                                                translationX = viewModel.subjectPosition.x * viewModel.displayScaleFactor,
+                                                translationY = viewModel.subjectPosition.y * viewModel.displayScaleFactor
+                                            ).animateContentSize(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                            }
+                        }
                     }
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(24.dp)
-                            .background(Color.White.copy(0.1f))
-                            .align(Alignment.CenterVertically)
-                    )
-                    IconButton(
-                        onClick = { viewModel.redo() },
-                        enabled = viewModel.canRedo
-                    ) {
-                        Icon(
-                            Icons.Default.Redo,
-                            "Redo",
-                            tint = if (viewModel.canRedo) Color.White else Color.White.copy(0.3f)
+
+                    if (viewModel.isProcessing) {
+                        CircularProgressIndicator(
+                            color = Primary,
+                            modifier = Modifier.size(48.dp)
                         )
                     }
                 }
-            } else {
-                Button(
-                    onClick = {
-                        showSaveSheet = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Primary,
-                        contentColor = Color.White
-                    ),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                    shape = RoundedCornerShape(50)
-                ) {
-                    Text("Save", fontWeight = FontWeight.SemiBold)
-                }
             }
-        }
 
-        // 3. BOTTOM CONTROLS (Floating)
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp)
-        ) {
+            // 2. BOTTOM CONTROLS - Now in Column, stacks naturally
             if (isManual) {
                 // Manual Edit Controls
                 BrushControlPanel(
@@ -511,48 +524,47 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                     onCancel = { viewModel.exitManualEditMode(false) }
                 )
             } else {
-                // Main Menu - Clean Transparent Row (Reverted & Refined)
-                Box(
+                // Main Menu - Clean Row
+                Row(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(vertical = 16.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        EditorMenuItem(
-                            icon = Icons.Default.ColorLens,
-                            label = "Background",
-                            onClick = { showBgPicker = true }
-                        )
-                        
+                    EditorMenuItem(
+                        icon = Icons.Default.ColorLens,
+                        label = stringResource(R.string.menu_background),
+                        onClick = { viewModel.showBgPicker = true }
+                    )
 
-                        
-                        EditorMenuItem(
-                            icon = Icons.Default.Delete,
-                            label = "Erase",
-                            onClick = {
-                                viewModel.updateBrushTool(mode = BrushMode.ERASE, null, null, null)
-                                viewModel.enterManualEditMode()
-                            }
-                        )
-                        
-                        EditorMenuItem(
-                            icon = Icons.Default.Brush,
-                            label = "Restore",
-                            onClick = {
-                                viewModel.updateBrushTool(mode = BrushMode.RESTORE, null, null, null)
-                                viewModel.enterManualEditMode()
-                            }
-                        )
-                    }
+                    EditorMenuItem(
+                        icon = Icons.Default.Delete,
+                        label = stringResource(R.string.manual_mode_erase),
+                        onClick = {
+                            viewModel.updateBrushTool(mode = BrushMode.ERASE, null, null, null)
+                            viewModel.enterManualEditMode()
+                        }
+                    )
+
+                    EditorMenuItem(
+                        icon = Icons.Default.Brush,
+                        label = stringResource(R.string.manual_mode_restore),
+                        onClick = {
+                            viewModel.updateBrushTool(mode = BrushMode.RESTORE, null, null, null)
+                            viewModel.enterManualEditMode()
+                        }
+                    )
                 }
             }
+
+            // 3. BANNER AD - At bottom of Column
+            BannerAd(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+            )
         }
     }
 
@@ -561,7 +573,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             currentBackground = viewModel.currentBackground,
             onBackgroundSelected = { viewModel.applyBackground(it) },
             onPickCustomImage = { customImagePickerLauncher.launch("image/*") },
-            onDismiss = { showBgPicker = false }
+            onDismiss = { viewModel.showBgPicker = false }
         )
     }
 
@@ -569,26 +581,26 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
         SaveOptionsSheet(
             currentBackground = viewModel.currentBackground,
             onSave = { format ->
-                showSaveSheet = false
+                viewModel.showSaveSheet = false
                 viewModel.saveBitmap(format) { result ->
                     if (result.isSuccess) {
-                        showSuccessDialog = true
+                        viewModel.showSuccessDialog = true
                     } else {
                         Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
                     }
                 }
             },
-            onDismiss = { showSaveSheet = false }
+            onDismiss = { viewModel.showSaveSheet = false }
         )
     }
 
     if (showSuccessDialog) {
         SaveSuccessDialog(
             onEditNewImage = {
-                showSuccessDialog = false
+                viewModel.showSuccessDialog = false
                 onBackClick() // This resets VM and goes back to Home
             },
-            onDismiss = { showSuccessDialog = false }
+            onDismiss = { viewModel.showSuccessDialog = false }
         )
     }
 
@@ -603,9 +615,19 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = Primary)
                 Spacer(Modifier.height(16.dp))
-                Text("Saving to Gallery...", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.saving_message), color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
+    }
+
+    if (showExitConfirmDialog) {
+        ExitConfirmDialog(
+            onConfirm = {
+                viewModel.showExitConfirmDialog = false
+                onBackClick()
+            },
+            onDismiss = { viewModel.showExitConfirmDialog = false }
+        )
     }
 }
 
@@ -662,7 +684,12 @@ fun BackgroundPickerSheet(
     onDismiss: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Colors", "Gradients", "Images", "Blur")
+    val tabs = listOf(
+        stringResource(R.string.tab_colors),
+        stringResource(R.string.tab_gradients),
+        stringResource(R.string.tab_images),
+        stringResource(R.string.tab_blur)
+    )
     
     // State Management
     var currentView by remember { mutableStateOf(PickerView.Main) }
@@ -1008,12 +1035,12 @@ fun ImagesGrid(
         SelectionItem(
             isSelected = current is BackgroundType.Original,
             onClick = { onSelect(BackgroundType.Original) },
-            label = "Original",
+            label = stringResource(R.string.original),
             aspectRatio = 1f,
             modifier = Modifier.weight(1f)
         ) {
             Box(Modifier.fillMaxSize().background(Color.DarkGray), contentAlignment = Alignment.Center) {
-                Text("ORIG", color = Color.White.copy(0.5f), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.original), color = Color.White.copy(0.5f), fontWeight = FontWeight.Bold)
             }
         }
 
@@ -1021,7 +1048,7 @@ fun ImagesGrid(
         SelectionItem(
             isSelected = current is BackgroundType.CustomImage,
             onClick = onPickCustom,
-            label = "Custom",
+            label = stringResource(R.string.custom_color),
             aspectRatio = 1f,
             modifier = Modifier.weight(1f)
         ) {
@@ -1052,7 +1079,7 @@ fun BlurControl(current: BackgroundType, onSelect: (BackgroundType) -> Unit) {
     }
     
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Blur Intensity", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 16.dp))
+        Text(stringResource(R.string.blur_intensity), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 16.dp))
         
         Slider(
             value = sliderValue,
@@ -1110,4 +1137,50 @@ fun SelectionItem(
             Text(label, color = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
         }
     }
+}
+
+@Composable
+fun ExitConfirmDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                text = stringResource(R.string.exit_confirm_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.exit_confirm_message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(stringResource(R.string.btn_leave), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(stringResource(R.string.btn_stay))
+            }
+        }
+    )
 }
