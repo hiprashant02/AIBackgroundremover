@@ -2,7 +2,7 @@
     <string name="app_name">AI Arka Plan Kaldırıcı</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">Arka Plan Kaldır</string>
     <string name="hero_title">Sihir\nYarat.</string>
     <string name="hero_subtitle">Yapay zeka destekli düzenleme ile\nfotoğraflarınızı başyapıtlara dönüştürün.</string>
     <string name="action_gallery_title">Galeri</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">Geliştirici</string>
-    <string name="about_us_description">LittiChokha, hassasiyet ve amaçla tasarlanmış bağımsız bir geliştirme platformudur. Yalnızca göze batmayan reklamlarla desteklenen sağlam, özenle tasarlanmış özellikleri ücretsiz sunar. Kalite ve sıkı gizlilik standartlarına güçlü bir bağlılıkla, LittiChokha temiz, güvenilir ve kullanıcı odaklı bir deneyim sunar.</string>
+    <string name="about_us_description">LittiChokha Studio, hassasiyet ve amaçla tasarlanmış bağımsız bir geliştirme platformudur. Yalnızca göze batmayan reklamlarla desteklenen sağlam, özenle tasarlanmış özellikleri ücretsiz sunar. Kalite ve sıkı gizlilik standartlarına güçlü bir bağlılıkla, LittiChokha temiz, güvenilir ve kullanıcı odaklı bir deneyim sunar.</string>
     <string name="developed_by">Prashant Kumar tarafından geliştirildi</string>
     
     <!-- About This App Section -->

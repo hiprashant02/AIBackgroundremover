@@ -37,11 +37,24 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+
 class MainActivity : ComponentActivity() {
     
     private lateinit var inAppUpdateManager: InAppUpdateManager
+    private var isPreferencesLoaded = false
+    private var initialTheme = "dark"
+    private var initialLanguage = "en"
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen before super.onCreate
+        val splashScreen = installSplashScreen()
+        
+        // Keep splash screen visible until preferences are loaded
+        splashScreen.setKeepOnScreenCondition { !isPreferencesLoaded }
+        
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -50,14 +63,27 @@ class MainActivity : ComponentActivity() {
 
         // Initialize In-App Update Manager
         inAppUpdateManager = InAppUpdateManager(this)
+        
+        // Load preferences BEFORE setContent (blocking but fast)
+        val preferencesManager = PreferencesManager(this)
+        runBlocking {
+            initialTheme = preferencesManager.themeFlow.first()
+            initialLanguage = preferencesManager.languageFlow.first()
+        }
+        
+        // Apply language locale immediately
+        applyLocale(initialLanguage)
+        
+        isPreferencesLoaded = true
 
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }
-            val preferencesManager = remember { PreferencesManager(this@MainActivity) }
+            val prefManager = remember { preferencesManager }
             
-            // Theme State - persisted
-            val savedTheme by preferencesManager.themeFlow.collectAsState(initial = "dark")
-            var isDarkTheme by remember(savedTheme) { mutableStateOf(savedTheme == "dark") }
+            // Theme State - initialized with pre-loaded value
+            var isDarkTheme by remember { mutableStateOf(initialTheme == "dark") }
+            // Language State - initialized with pre-loaded value
+            var currentLanguage by remember { mutableStateOf(initialLanguage) }
             val coroutineScope = rememberCoroutineScope()
 
             AIBackgroundRemoverTheme(darkTheme = isDarkTheme) {
@@ -68,9 +94,6 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.fillMaxSize()) {
                         val navController = rememberNavController()
                         val viewModel: EditorViewModel = viewModel()
-                        val currentLanguage by preferencesManager.languageFlow.collectAsState(
-                            initial = "en"
-                        )
 
                         // Initialize the ViewModel with context
                         viewModel.initialize(this@MainActivity)
@@ -89,13 +112,14 @@ class MainActivity : ComponentActivity() {
                                     onToggleTheme = { 
                                         isDarkTheme = !isDarkTheme
                                         coroutineScope.launch {
-                                            preferencesManager.setTheme(if (isDarkTheme) "dark" else "light")
+                                            prefManager.setTheme(if (isDarkTheme) "dark" else "light")
                                         }
                                     },
                                     currentLanguage = currentLanguage,
                                     onLanguageSelected = { languageCode ->
+                                        currentLanguage = languageCode
                                         coroutineScope.launch {
-                                            preferencesManager.setLanguage(languageCode)
+                                            prefManager.setLanguage(languageCode)
                                             updateLocale(languageCode)
                                         }
                                     },
@@ -151,13 +175,18 @@ class MainActivity : ComponentActivity() {
         }
     }
     
-    private fun updateLocale(languageCode: String) {
+    // Apply locale without recreating activity (used on initial load)
+    private fun applyLocale(languageCode: String) {
         val locale = Locale(languageCode)
         Locale.setDefault(locale)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         resources.updateConfiguration(config, resources.displayMetrics)
-        
+    }
+    
+    // Update locale and recreate activity (used when user changes language)
+    private fun updateLocale(languageCode: String) {
+        applyLocale(languageCode)
         // Recreate activity to apply language change
         recreate()
     }

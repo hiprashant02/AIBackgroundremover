@@ -2,7 +2,7 @@
     <string name="app_name">AI Background remover</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">Hintergrund Entf.</string>
     <string name="hero_title">Erstelle\nMagie.</string>
     <string name="hero_subtitle">Verwandle deine Fotos in Meisterwerke\nmit KI-gestützter Bearbeitung.</string>
     <string name="action_gallery_title">Galerie</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">Entwickler</string>
-    <string name="about_us_description">LittiChokha ist eine unabhängige Entwicklungsplattform, die mit Präzision und Zweck gestaltet wurde. Sie bietet robuste, durchdacht entwickelte Funktionen kostenlos an, unterstützt nur durch unaufdringliche Werbung. Mit einem starken Engagement für Qualität und strenge Datenschutzstandards bietet LittiChokha eine saubere, zuverlässige und benutzerzentrierte Erfahrung.</string>
+    <string name="about_us_description">LittiChokha Studio ist eine unabhängige Entwicklungsplattform, die mit Präzision und Zweck gestaltet wurde. Sie bietet robuste, durchdacht entwickelte Funktionen kostenlos an, unterstützt nur durch unaufdringliche Werbung. Mit einem starken Engagement für Qualität und strenge Datenschutzstandards bietet LittiChokha eine saubere, zuverlässige und benutzerzentrierte Erfahrung.</string>
     <string name="developed_by">Entwickelt von Prashant Kumar</string>
     
     <!-- About This App Section -->

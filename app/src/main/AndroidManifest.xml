@@ -36,7 +36,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.AIBackgroundRemover">
+            android:theme="@style/Theme.AIBackgroundRemover.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

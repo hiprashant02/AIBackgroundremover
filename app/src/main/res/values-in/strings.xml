@@ -2,7 +2,7 @@
     <string name="app_name">Penghapus Latar Belakang AI</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">Hapus Latar</string>
     <string name="hero_title">Ciptakan\nKeajaiban.</string>
     <string name="hero_subtitle">Ubah foto Anda menjadi mahakarya\ndengan pengeditan bertenaga AI.</string>
     <string name="action_gallery_title">Galeri</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">Pengembang</string>
-    <string name="about_us_description">LittiChokha adalah platform pengembangan independen yang dirancang dengan presisi dan tujuan. Menyediakan fitur yang kuat dan dirancang dengan cermat tanpa biaya, didukung hanya oleh iklan yang tidak mengganggu. Dengan komitmen kuat terhadap kualitas dan standar privasi yang ketat, LittiChokha memberikan pengalaman yang bersih, andal, dan berfokus pada pengguna.</string>
+    <string name="about_us_description">LittiChokha Studio adalah platform pengembangan independen yang dirancang dengan presisi dan tujuan. Menyediakan fitur yang kuat dan dirancang dengan cermat tanpa biaya, didukung hanya oleh iklan yang tidak mengganggu. Dengan komitmen kuat terhadap kualitas dan standar privasi yang ketat, LittiChokha memberikan pengalaman yang bersih, andal, dan berfokus pada pengguna.</string>
     <string name="developed_by">Dikembangkan oleh Prashant Kumar</string>
     
     <!-- About This App Section -->

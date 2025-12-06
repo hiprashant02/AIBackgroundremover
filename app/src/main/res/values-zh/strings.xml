@@ -2,7 +2,7 @@
     <string name="app_name">AI Background remover</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">移除背景</string>
     <string name="hero_title">创造\n魔法。</string>
     <string name="hero_subtitle">使用AI驱动的编辑\n将您的照片变成杰作。</string>
     <string name="action_gallery_title">图库</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">开发者</string>
-    <string name="about_us_description">LittiChokha是一个独立的开发平台，以精确和目的设计。它提供强大、精心设计的功能，完全免费，仅由不显眼的广告支持。凭借对质量和严格隐私标准的坚定承诺，LittiChokha提供干净、可靠和以用户为中心的体验。</string>
+    <string name="about_us_description">LittiChokha Studio是一个独立的开发平台，以精确和目的设计。它提供强大、精心设计的功能，完全免费，仅由不显眼的广告支持。凭借对质量和严格隐私标准的坚定承诺，LittiChokha提供干净、可靠和以用户为中心的体验。</string>
     <string name="developed_by">由Prashant Kumar开发</string>
     
     <!-- About This App Section -->

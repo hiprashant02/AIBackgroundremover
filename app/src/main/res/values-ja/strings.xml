@@ -2,7 +2,7 @@
     <string name="app_name">AI背景リムーバー</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">背景を削除</string>
     <string name="hero_title">マジックを\n作成。</string>
     <string name="hero_subtitle">AI搭載の編集で\n写真を傑作に変えましょう。</string>
     <string name="action_gallery_title">ギャラリー</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">開発者</string>
-    <string name="about_us_description">LittiChokhaは、精度と目的を持って設計された独立した開発プラットフォームです。控えめな広告のみでサポートされた、堅牢で思慮深く設計された機能を無料で提供します。品質と厳格なプライバシー基準への強いコミットメントにより、LittiChokhaはクリーンで信頼性が高く、ユーザー中心の体験を提供します。</string>
+    <string name="about_us_description">LittiChokha Studioは、精度と目的を持って設計された独立した開発プラットフォームです。控えめな広告のみでサポートされた、堅牢で思慮深く設計された機能を無料で提供します。品質と厳格なプライバシー基準への強いコミットメントにより、LittiChokhaはクリーンで信頼性が高く、ユーザー中心の体験を提供します。</string>
     <string name="developed_by">Prashant Kumar開発</string>
     
     <!-- About This App Section -->

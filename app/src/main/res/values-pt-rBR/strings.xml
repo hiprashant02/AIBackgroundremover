@@ -2,7 +2,7 @@
     <string name="app_name">Removedor de Fundo IA</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">Remover Fundo</string>
     <string name="hero_title">Crie\nMagia.</string>
     <string name="hero_subtitle">Transforme suas fotos em obras-primas\ncom edição com IA.</string>
     <string name="action_gallery_title">Galeria</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">Desenvolvedor</string>
-    <string name="about_us_description">LittiChokha é uma plataforma de desenvolvimento independente projetada com precisão e propósito. Oferece recursos robustos e cuidadosamente projetados sem custo, apoiados apenas por anúncios discretos. Com forte compromisso com qualidade e rígidos padrões de privacidade, LittiChokha oferece uma experiência limpa, confiável e focada no usuário.</string>
+    <string name="about_us_description">LittiChokha Studio é uma plataforma de desenvolvimento independente projetada com precisão e propósito. Oferece recursos robustos e cuidadosamente projetados sem custo, apoiados apenas por anúncios discretos. Com forte compromisso com qualidade e rígidos padrões de privacidade, LittiChokha oferece uma experiência limpa, confiável e focada no usuário.</string>
     <string name="developed_by">Desenvolvido por Prashant Kumar</string>
     
     <!-- About This App Section -->

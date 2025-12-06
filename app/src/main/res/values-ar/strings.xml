@@ -2,7 +2,7 @@
     <string name="app_name">مزيل الخلفية بالذكاء الاصطناعي</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Littichokha Studio</string>
+    <string name="studio_title">إزالة الخلفية</string>
     <string name="hero_title">اصنع\nالسحر.</string>
     <string name="hero_subtitle">حوّل صورك إلى روائع\nبالتحرير بالذكاء الاصطناعي.</string>
     <string name="action_gallery_title">المعرض</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">المطور</string>
-    <string name="about_us_description">LittiChokha هي منصة تطوير مستقلة مصممة بدقة وهدف. تقدم ميزات قوية ومصممة بعناية مجاناً، مدعومة فقط بإعلانات غير مزعجة. مع التزام قوي بالجودة ومعايير الخصوصية الصارمة، توفر LittiChokha تجربة نظيفة وموثوقة تركز على المستخدم.</string>
+    <string name="about_us_description">LittiChokha Studio هي منصة تطوير مستقلة مصممة بدقة وهدف. تقدم ميزات قوية ومصممة بعناية مجاناً، مدعومة فقط بإعلانات غير مزعجة. مع التزام قوي بالجودة ومعايير الخصوصية الصارمة، توفر LittiChokha تجربة نظيفة وموثوقة تركز على المستخدم.</string>
     <string name="developed_by">تطوير Prashant Kumar</string>
     
     <!-- About This App Section -->
