@@ -8,6 +8,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.remover.background.AI.BuildConfig
 
 /**
  * Manager for interstitial ads
@@ -18,16 +19,11 @@ class InterstitialAdManager(private val context: Context) {
     private var interstitialAd: InterstitialAd? = null
     private var isLoading = false
     
-    companion object {
-        // Test interstitial ad unit ID - Replace with your actual ad unit ID for production
-        private const val TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
-    }
-    
     /**
      * Load an interstitial ad
      * Call this early so the ad is ready when needed
      */
-    fun loadAd(adUnitId: String = TEST_AD_UNIT_ID) {
+    fun loadAd(adUnitId: String = BuildConfig.ADMOB_INTERSTITIAL_ID) {
         if (isLoading || interstitialAd != null) {
             return // Already loading or loaded
         }

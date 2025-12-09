@@ -135,5 +135,5 @@
     <!-- Rate and Share -->
     <string name="rate_app">Rate App</string>
     <string name="share_app">Share App</string>
-    <string name="share_message">Check out AI Background Remover - Remove backgrounds from photos in seconds!</string>
+    <string name="share_message">Check out AI Background Remover - Remove backgrounds from photos automatically in seconds!</string>
 </resources>

@@ -2,7 +2,7 @@
     <string name="app_name">Suppresseur de Fond IA</string>
     
     <!-- Home Screen -->
-    <string name="studio_title">Supprimer Fond</string>
+    <string name="studio_title">Littichokha Studio</string>
     <string name="hero_title">Créez\nla Magie.</string>
     <string name="hero_subtitle">Transformez vos photos en chefs-d\'œuvre\navec l\'édition alimentée par IA.</string>
     <string name="action_gallery_title">Galerie</string>
@@ -118,7 +118,7 @@
     
     <!-- About Us Section -->
     <string name="about_us_title">Développeur</string>
-    <string name="about_us_description">LittiChokha Studio est une plateforme de développement indépendante conçue avec précision et objectif. Elle offre des fonctionnalités robustes et soigneusement conçues sans frais, soutenues uniquement par des publicités discrètes. Avec un fort engagement envers la qualité et des normes de confidentialité strictes, LittiChokha offre une expérience propre, fiable et centrée sur l\'utilisateur.</string>
+    <string name="about_us_description">LittiChokha est une plateforme de développement indépendante conçue avec précision et objectif. Elle offre des fonctionnalités robustes et soigneusement conçues sans frais, soutenues uniquement par des publicités discrètes. Avec un fort engagement envers la qualité et des normes de confidentialité strictes, LittiChokha offre une expérience propre, fiable et centrée sur l\'utilisateur.</string>
     <string name="developed_by">Développé par Prashant Kumar</string>
     
     <!-- About This App Section -->
@@ -131,10 +131,5 @@
     <string name="email_us">Envoyer des commentaires</string>
     <string name="developer_email">letsdevelop07@gmail.com</string>
     <string name="privacy_policy">Politique de Confidentialité</string>
-    
-    <!-- Rate and Share -->
-    <string name="rate_app">Noter</string>
-    <string name="share_app">Partager</string>
-    <string name="share_message">Découvrez AI Background Remover - Supprimez les arrière-plans en quelques secondes!</string>
 </resources>
 

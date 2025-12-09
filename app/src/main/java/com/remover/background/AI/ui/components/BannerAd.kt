@@ -12,17 +12,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.remover.background.AI.BuildConfig
 
 /**
  * Composable banner ad component
  * Displays a Google AdMob banner ad at the bottom of the screen
  * 
- * @param adUnitId The AdMob ad unit ID. Use test ID for development.
+ * @param adUnitId The AdMob ad unit ID. Uses BuildConfig value by default.
  * @param modifier Optional modifier for the ad container
  */
 @Composable
 fun BannerAd(
-    adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // Test banner ad unit ID
+    adUnitId: String = BuildConfig.ADMOB_BANNER_ID,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -55,7 +56,7 @@ fun BannerAd(
  */
 @Composable
 fun AdaptiveBannerAd(
-    adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // Test banner ad unit ID
+    adUnitId: String = BuildConfig.ADMOB_BANNER_ID,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
