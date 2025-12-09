@@ -26,6 +26,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
+        // Keep all language resources (prevent Play Store from stripping them)
+        resourceConfigurations += listOf(
+            "en", "es", "fr", "de", "hi", "zh", 
+            "pt-rBR", "in", "ja", "ko", "ar", "tr"
+        )
+        
         // AdMob IDs from local.properties (fallback to test IDs for development)
         buildConfigField("String", "ADMOB_APP_ID", "\"${localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")}\"")
         buildConfigField("String", "ADMOB_BANNER_ID", "\"${localProperties.getProperty("ADMOB_BANNER_ID", "ca-app-pub-3940256099942544/6300978111")}\"")
@@ -61,6 +67,13 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    
+    // Disable language splitting in App Bundle - keep all languages
+    bundle {
+        language {
+            enableSplit = false
+        }
     }
 }
 
