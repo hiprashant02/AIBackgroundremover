@@ -25,7 +25,8 @@ import java.io.File
 class ImageProcessor {
 
     companion object {
-        private const val MAX_IMAGE_DIMENSION = 2048
+        // 4K resolution limit - maintains quality while preventing Canvas crashes
+        private const val MAX_IMAGE_DIMENSION = 4096
     }
 
     suspend fun resizeIfNeeded(bitmap: Bitmap): Bitmap = withContext(Dispatchers.Default) {

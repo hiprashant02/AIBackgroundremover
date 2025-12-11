@@ -57,6 +57,9 @@ class EditorViewModel : ViewModel() {
     var blurredBackgroundBitmap by mutableStateOf<Bitmap?>(null)
         private set
     
+    // Store original URI for full-resolution export
+    private var originalImageUri: Uri? = null
+    
     // Subject Transform State
     var subjectScale by mutableStateOf(1f)
         private set
@@ -82,6 +85,7 @@ class EditorViewModel : ViewModel() {
     private var reviewManager: InAppReviewManager? = null
     private var interstitialAdManager: InterstitialAdManager? = null
     private var activityRef: Activity? = null
+    private var appContext: Context? = null // Store context for full-res export
     private val manualEditingProcessor = ManualEditingProcessor()
     var useDirectForeground by mutableStateOf(true)
         private set
@@ -90,6 +94,8 @@ class EditorViewModel : ViewModel() {
     var currentBrushTool by mutableStateOf(BrushTool())
         private set
     var editableMask by mutableStateOf<Bitmap?>(null)
+        private set
+    var isBrushProcessing by mutableStateOf(false)
         private set
     private val brushStrokes = mutableListOf<DrawingPath>()
     private val strokeMutex = Mutex() // Ensure strokes are processed sequentially
@@ -116,6 +122,7 @@ class EditorViewModel : ViewModel() {
             fileManager = FileManager(context)
             reviewManager = InAppReviewManager(context)
             interstitialAdManager = InterstitialAdManager(context)
+            appContext = context.applicationContext // Store for full-res export
             // Store activity reference if context is an Activity
             if (context is Activity) {
                 activityRef = context
@@ -131,22 +138,64 @@ class EditorViewModel : ViewModel() {
             // Reset all states first to ensure clean slate for new session
             resetStatesSync()
             
+            // Store original URI for full-resolution export
+            originalImageUri = uri
+            
             editorState = EditorState.Loading
             isProcessing = true
             try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream?.close()
+                val bitmap = withContext(Dispatchers.IO) {
+                    // First, get the image dimensions without loading full bitmap
+                    val options = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream, null, options)
+                    }
+                    
+                    // Validate dimensions were read successfully
+                    if (options.outWidth <= 0 || options.outHeight <= 0) {
+                        // Failed to read dimensions, try loading directly with a safe sample size
+                        val fallbackOptions = BitmapFactory.Options().apply {
+                            inSampleSize = 2 // Safe default
+                            inPreferredConfig = Bitmap.Config.ARGB_8888
+                        }
+                        return@withContext context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream, null, fallbackOptions)
+                        }
+                    }
+                    
+                    // Calculate sample size to avoid loading huge images into memory
+                    val maxDimension = 4096
+                    var sampleSize = 1
+                    while (options.outWidth / sampleSize > maxDimension || 
+                           options.outHeight / sampleSize > maxDimension) {
+                        sampleSize *= 2
+                    }
+                    
+                    // Now decode with the calculated sample size
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                        inPreferredConfig = Bitmap.Config.ARGB_8888
+                    }
+                    
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream, null, decodeOptions)
+                    }
+                }
+                
                 if (bitmap == null) {
-                    editorState = EditorState.Error("Failed to load image")
+                    editorState = EditorState.Error("Failed to load image. Please try another image.")
                     return@launch
                 }
+                
                 val resized = imageProcessor.resizeIfNeeded(bitmap)
                 if (resized != bitmap) bitmap.recycle()
                 originalBitmap = resized
                 processBackground(resized)
             } catch (e: Exception) {
-                editorState = EditorState.Error("Error: ${e.message}")
+                editorState = EditorState.Error("Error loading image: ${e.message}")
             } finally {
                 isProcessing = false
             }
@@ -196,12 +245,25 @@ class EditorViewModel : ViewModel() {
             // Use fast MLKit by default for instant results
             val result = processor?.removeBackground(bitmap)
             if (result?.isSuccess == true) {
-                foregroundBitmap = result.getOrNull()
-                applyBackgroundToForeground(BackgroundType.Transparent)
+                val fg = result.getOrNull()
+                if (fg != null) {
+                    foregroundBitmap = fg
+                    applyBackgroundToForeground(BackgroundType.Transparent)
+                } else {
+                    // ML Kit returned success but no bitmap - show original as fallback
+                    foregroundBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+                    applyBackgroundToForeground(BackgroundType.Transparent)
+                }
             } else {
-                editorState = EditorState.Error("Failed background removal")
+                // Background removal failed - show original image as fallback
+                foregroundBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+                applyBackgroundToForeground(BackgroundType.Original)
             }
-        } catch(e: Exception) { editorState = EditorState.Error(e.message ?: "Error") }
+        } catch(e: Exception) { 
+            // On any error, show original image as fallback
+            foregroundBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+            applyBackgroundToForeground(BackgroundType.Original)
+        }
     }
 
     // ... Background Application Logic (Unchanged) ...
@@ -212,8 +274,22 @@ class EditorViewModel : ViewModel() {
         backgroundJob = viewModelScope.launch {
             isProcessing = true
             try {
-                val orig = originalBitmap ?: return@launch
-                val fg = foregroundBitmap ?: return@launch
+                val orig = originalBitmap
+                val fg = foregroundBitmap
+                
+                // Handle null cases with proper error messages
+                if (orig == null) {
+                    editorState = EditorState.Error("Image not loaded. Please try again.")
+                    isProcessing = false
+                    return@launch
+                }
+                
+                if (fg == null) {
+                    // If no foreground, display original image
+                    editorState = EditorState.Success(orig)
+                    isProcessing = false
+                    return@launch
+                }
                 
                 val precomputedBlur = if (background is BackgroundType.Blur) {
                      withContext(Dispatchers.Default) {
@@ -238,7 +314,12 @@ class EditorViewModel : ViewModel() {
                 currentBackground = background
                 editorState = EditorState.Success(result)
             } catch (e: Exception) {
-                // Handle error or cancellation
+                // On error, try to show something instead of blank screen
+                originalBitmap?.let { 
+                    editorState = EditorState.Success(it) 
+                } ?: run {
+                    editorState = EditorState.Error("Failed to process image")
+                }
             } finally {
                 isProcessing = false
             }
@@ -261,25 +342,96 @@ class EditorViewModel : ViewModel() {
                 val currentFg = foregroundBitmap
                 val currentBg = currentBackground
                 val orig = originalBitmap
+                val uri = originalImageUri
+                val ctx = appContext
 
                 if (currentFg != null && orig != null) {
-                    // Recompose final image with latest transform to ensure WYSIWYG
                     val finalBitmap = withContext(Dispatchers.Default) {
-                        imageProcessor.composeFinalImage(
-                            foreground = currentFg,
-                            background = currentBg,
-                            originalWidth = orig.width,
-                            originalHeight = orig.height,
-                            originalBitmap = orig,
-                            subjectX = subjectPosition.x,
-                            subjectY = subjectPosition.y,
-                            subjectScale = subjectScale,
-                            subjectRotation = subjectRotation
-                        )
+                        // Try to load full-resolution original for export
+                        var fullResOriginal: Bitmap? = null
+                        if (uri != null && ctx != null) {
+                            try {
+                                ctx.contentResolver.openInputStream(uri)?.use { stream ->
+                                    // Load at full resolution (no sampling)
+                                    fullResOriginal = BitmapFactory.decodeStream(stream)
+                                }
+                            } catch (e: Exception) {
+                                // Failed to load full-res, fall back to working resolution
+                                fullResOriginal = null
+                            }
+                        }
+                        
+                        // If we have full-res original and it's larger than working version
+                        if (fullResOriginal != null && 
+                            (fullResOriginal!!.width > orig.width || fullResOriginal!!.height > orig.height)) {
+                            
+                            val fullWidth = fullResOriginal!!.width
+                            val fullHeight = fullResOriginal!!.height
+                            
+                            // Scale up foreground to match full resolution
+                            val scaledFg = Bitmap.createScaledBitmap(currentFg, fullWidth, fullHeight, true)
+                            
+                            // Calculate scale ratio for transform adjustment
+                            val scaleRatio = fullWidth.toFloat() / orig.width.toFloat()
+                            
+                            // Load full-resolution custom background if applicable
+                            var exportBackground = currentBg
+                            if (currentBg is BackgroundType.CustomImage && currentBg.originalUri != null && ctx != null) {
+                                try {
+                                    ctx.contentResolver.openInputStream(currentBg.originalUri)?.use { bgStream ->
+                                        val fullResBg = BitmapFactory.decodeStream(bgStream)
+                                        if (fullResBg != null) {
+                                            exportBackground = BackgroundType.CustomImage(fullResBg, currentBg.originalUri)
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    // Failed to load full-res background, use existing
+                                }
+                            }
+                            
+                            val result = imageProcessor.composeFinalImage(
+                                foreground = scaledFg,
+                                background = exportBackground,
+                                originalWidth = fullWidth,
+                                originalHeight = fullHeight,
+                                originalBitmap = fullResOriginal,
+                                subjectX = subjectPosition.x * scaleRatio,
+                                subjectY = subjectPosition.y * scaleRatio,
+                                subjectScale = subjectScale,
+                                subjectRotation = subjectRotation
+                            )
+                            
+                            // Cleanup
+                            scaledFg.recycle()
+                            fullResOriginal!!.recycle()
+                            if (exportBackground is BackgroundType.CustomImage && exportBackground != currentBg) {
+                                (exportBackground as BackgroundType.CustomImage).bitmap.recycle()
+                            }
+                            
+                            result
+                        } else {
+                            // Use working resolution (full-res not available or same size)
+                            fullResOriginal?.recycle()
+                            
+                            imageProcessor.composeFinalImage(
+                                foreground = currentFg,
+                                background = currentBg,
+                                originalWidth = orig.width,
+                                originalHeight = orig.height,
+                                originalBitmap = orig,
+                                subjectX = subjectPosition.x,
+                                subjectY = subjectPosition.y,
+                                subjectScale = subjectScale,
+                                subjectRotation = subjectRotation
+                            )
+                        }
                     }
 
                     val fileName = "edited_${System.currentTimeMillis()}.png"
                     val result = fileManager?.saveBitmapToGallery(finalBitmap, fileName, format)
+                    
+                    // Recycle the final bitmap after saving
+                    finalBitmap.recycle()
                     
                     if (result != null) {
                         onComplete(result)
@@ -311,13 +463,10 @@ class EditorViewModel : ViewModel() {
                             // Show interstitial ad and request review after successful save
                             if (result.isSuccess) {
                                 activityRef?.let { activity ->
-                                    // Show interstitial ad first
                                     interstitialAdManager?.showAd(activity) {
-                                        // After ad is dismissed (or not shown), request review
-viewModelScope.launch {
-    reviewManager?.requestReviewIfEligible(activity)
-
-}
+                                        viewModelScope.launch {
+                                            reviewManager?.requestReviewIfEligible(activity)
+                                        }
                                     }
                                 }
                             }
@@ -537,6 +686,8 @@ viewModelScope.launch {
             isManualEditMode = false
             brushStrokes.clear()
             editableMask = null
+            hasPendingUndoSave = false
+            strokeApplyJob?.cancel()
 
             // Clear saved state
             savedForegroundBeforeManualEdit = null
@@ -545,6 +696,11 @@ viewModelScope.launch {
         }
     }
 
+    // Debounce job for applying strokes
+    private var strokeApplyJob: Job? = null
+    private var lastStrokeTime = 0L
+    private var hasPendingUndoSave = false
+    
     fun addBrushStroke(path: DrawingPath) {
         viewModelScope.launch {
             // Transform path if subject is moved/scaled/rotated
@@ -587,63 +743,92 @@ viewModelScope.launch {
                 } else path
             } else path
 
-            // Add the stroke
+            // Save undo state ONCE before first stroke in a drawing session
+            if (!hasPendingUndoSave) {
+                saveToUndoStack()
+                hasPendingUndoSave = true
+            }
+
+            // Add the stroke to pending list
             brushStrokes.add(transformedPath)
+            lastStrokeTime = System.currentTimeMillis()
             
-            // Apply and WAIT for it to complete before allowing next stroke
-            applyPendingStrokes()
+            // Cancel previous debounce job
+            strokeApplyJob?.cancel()
+            
+            // Apply strokes with debouncing - wait 100ms after last stroke before processing
+            strokeApplyJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(100)
+                applyPendingStrokesNonBlocking()
+            }
+        }
+    }
+
+    private suspend fun applyPendingStrokesNonBlocking() {
+        // Use mutex to ensure strokes are processed sequentially
+        strokeMutex.withLock {
+            if (brushStrokes.isEmpty()) return@withLock
+            
+            // Show processing indicator
+            isBrushProcessing = true
+            
+            // Make a copy of strokes to process
+            val strokesToApply = brushStrokes.toList()
+            brushStrokes.clear()
+            
+            val mask = editableMask ?: run {
+                isBrushProcessing = false
+                return@withLock
+            }
+            val orig = originalBitmap ?: run {
+                isBrushProcessing = false
+                return@withLock
+            }
+
+            try {
+                // Heavy bitmap processing on background thread
+                val (updatedMask, editedFg, result) = withContext(Dispatchers.Default) {
+                    // Apply strokes to the mask
+                    val newMask = manualEditingProcessor.applyBrushStrokes(
+                        mask, 
+                        strokesToApply, 
+                        mask.width, 
+                        mask.height
+                    )
+
+                    // Apply the new mask to the original image to get the new foreground
+                    val newFg = manualEditingProcessor.applyEditedMask(orig, newMask)
+
+                    // Compose final image for preview
+                    val finalResult = imageProcessor.composeFinalImage(
+                        newFg, 
+                        currentBackground, 
+                        orig.width, 
+                        orig.height, 
+                        orig,
+                        subjectPosition.x,
+                        subjectPosition.y,
+                        subjectScale,
+                        subjectRotation
+                    )
+                    
+                    Triple(newMask, newFg, finalResult)
+                }
+                
+                // Update state on Main thread
+                editableMask = updatedMask
+                foregroundBitmap = editedFg
+                editorState = EditorState.Success(result)
+            } finally {
+                // Always hide processing indicator
+                isBrushProcessing = false
+            }
         }
     }
 
     private suspend fun applyPendingStrokes() {
-        // Use mutex to ensure strokes are processed sequentially, not skipped
-        strokeMutex.withLock {
-            if (brushStrokes.isEmpty()) return@withLock
-            
-            // Save current state to undo stack BEFORE applying changes
-            saveToUndoStack()
-            
-            // Make a copy of strokes to process
-            val strokesToApply = brushStrokes.toList()
-            brushStrokes.clear() // Clear immediately to avoid race conditions with new strokes
-            
-            val mask = editableMask ?: return@withLock
-            val orig = originalBitmap ?: return@withLock
-
-            // Heavy bitmap processing on background thread
-            val (updatedMask, editedFg, result) = withContext(Dispatchers.Default) {
-                // Apply strokes to the mask
-                val newMask = manualEditingProcessor.applyBrushStrokes(
-                    mask, 
-                    strokesToApply, 
-                    mask.width, 
-                    mask.height
-                )
-
-                // Apply the new mask to the original image to get the new foreground
-                val newFg = manualEditingProcessor.applyEditedMask(orig, newMask)
-
-                // Compose final image for preview
-                val finalResult = imageProcessor.composeFinalImage(
-                    newFg, 
-                    currentBackground, 
-                    orig.width, 
-                    orig.height, 
-                    orig,
-                    subjectPosition.x,
-                    subjectPosition.y,
-                    subjectScale,
-                    subjectRotation
-                )
-                
-                Triple(newMask, newFg, finalResult)
-            }
-            
-            // Update state on Main thread
-            editableMask = updatedMask
-            foregroundBitmap = editedFg
-            editorState = EditorState.Success(result)
-        }
+        // Legacy function - just calls the non-blocking version
+        applyPendingStrokesNonBlocking()
     }
 
     fun clearBrushStrokes() {

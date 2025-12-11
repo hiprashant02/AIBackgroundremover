@@ -8,9 +8,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -18,6 +20,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.remover.background.AI.model.BrushMode
 import com.remover.background.AI.model.BrushTool
 import com.remover.background.AI.model.DrawingPath
@@ -28,6 +31,7 @@ fun DrawingCanvas(
     bitmap: Bitmap,
     brushTool: BrushTool,
     isEnabled: Boolean = true,
+    showCheckerboard: Boolean = false,
     onDrawingPath: (DrawingPath) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -116,10 +120,22 @@ fun DrawingCanvas(
                                         currentPath = listOf(imagePos)
                                         change.consume()
                                     } else if (change.pressed && change.positionChanged() && isDrawing) {
-                                        currentPath = currentPath + imagePos
+                                        // Optimization: Only add point if it's far enough from the last point
+                                        // This prevents the path from getting too large and causing lag/crashes
+                                        val lastPoint = currentPath.lastOrNull()
+                                        if (lastPoint != null) {
+                                            val dx = imagePos.x - lastPoint.x
+                                            val dy = imagePos.y - lastPoint.y
+                                            // Threshold of roughly 0.5-1% of screen size equivalent
+                                            if (dx * dx + dy * dy > 0.00005f) { 
+                                                currentPath = currentPath + imagePos
+                                            }
+                                        } else {
+                                            currentPath = currentPath + imagePos
+                                        }
                                         change.consume()
                                     } else if (!change.pressed && isDrawing) {
-                                        // Save all strokes including single taps
+                                        // Finger lifted - save stroke
                                         if (currentPath.isNotEmpty()) {
                                             onDrawingPath(DrawingPath(currentPath, brushTool))
                                         }
@@ -128,18 +144,27 @@ fun DrawingCanvas(
                                         cursorPosition = null
                                     }
                                 } else {
-                                    // Touch outside image bounds - only save multi-point strokes
-                                    if (isDrawing && currentPath.size > 1) {
-                                        onDrawingPath(DrawingPath(currentPath, brushTool))
+                                    // Touch outside image bounds - DON'T terminate stroke!
+                                    // Just don't add points. Stroke continues when finger comes back.
+                                    if (change.pressed && isDrawing) {
+                                        // Still drawing, just outside bounds - do nothing, keep drawing
+                                        change.consume()
+                                    } else if (!change.pressed && isDrawing) {
+                                        // Finger lifted while outside - save what we have
+                                        if (currentPath.isNotEmpty()) {
+                                            onDrawingPath(DrawingPath(currentPath, brushTool))
+                                        }
+                                        isDrawing = false
+                                        currentPath = emptyList()
+                                        cursorPosition = null
                                     }
-                                    isDrawing = false
-                                    currentPath = emptyList()
-                                    cursorPosition = null
                                 }
                             } else {
                                 // No touches - complete any in-progress stroke
-                                if (isDrawing && currentPath.size > 1) {
-                                    onDrawingPath(DrawingPath(currentPath, brushTool))
+                                if (isDrawing) {
+                                    if (currentPath.size > 1) {
+                                        onDrawingPath(DrawingPath(currentPath, brushTool))
+                                    }
                                     isDrawing = false
                                     currentPath = emptyList()
                                 }
@@ -156,6 +181,31 @@ fun DrawingCanvas(
                     translationY = offsetY
                 )
         ) {
+            // Draw Checkerboard ONLY within image bounds (if enabled)
+            if (showCheckerboard && imageBounds != androidx.compose.ui.geometry.Rect.Zero) {
+                clipRect(
+                    left = imageBounds.left,
+                    top = imageBounds.top,
+                    right = imageBounds.right,
+                    bottom = imageBounds.bottom
+                ) {
+                    val squareSize = 20.dp.toPx()
+                    val numCols = (imageBounds.width / squareSize).toInt() + 1
+                    val numRows = (imageBounds.height / squareSize).toInt() + 1
+                    
+                    for (row in 0..numRows) {
+                        for (col in 0..numCols) {
+                            val isLightSquare = (row + col) % 2 == 0
+                            drawRect(
+                                color = if (isLightSquare) Color(0xFFFFFFFF) else Color(0xFFE0E0E0),
+                                topLeft = Offset(imageBounds.left + col * squareSize, imageBounds.top + row * squareSize),
+                                size = Size(squareSize, squareSize)
+                            )
+                        }
+                    }
+                }
+            }
+            
             // Draw Image
             drawIntoCanvas { canvas ->
                 if (imageBounds != androidx.compose.ui.geometry.Rect.Zero) {

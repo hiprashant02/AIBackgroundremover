@@ -325,11 +325,34 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
     ) { uri: Uri? ->
         uri?.let {
             try {
-                val inputStream = context.contentResolver.openInputStream(it)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream?.close()
+                // First, get image dimensions without loading full bitmap
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                context.contentResolver.openInputStream(it)?.use { stream ->
+                    BitmapFactory.decodeStream(stream, null, options)
+                }
+                
+                // Calculate sample size to avoid loading huge images
+                val maxDimension = 4096
+                var sampleSize = 1
+                while (options.outWidth / sampleSize > maxDimension || 
+                       options.outHeight / sampleSize > maxDimension) {
+                    sampleSize *= 2
+                }
+                
+                // Now decode with the calculated sample size
+                val decodeOptions = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                }
+                
+                val bitmap = context.contentResolver.openInputStream(it)?.use { stream ->
+                    BitmapFactory.decodeStream(stream, null, decodeOptions)
+                }
+                
                 if (bitmap != null) {
-                    viewModel.applyBackground(BackgroundType.CustomImage(bitmap))
+                    // Pass original URI for full-resolution export
+                    viewModel.applyBackground(BackgroundType.CustomImage(bitmap, originalUri = it))
                     viewModel.showBgPicker = false
                 }
             } catch (e: Exception) {
@@ -455,16 +478,30 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                         // Display the image - background including checkerboard is already composited into bitmap
                         if (isManual) {
                             Box(modifier = Modifier.fillMaxSize()) {
-                                if (viewModel.currentBackground is BackgroundType.Transparent) {
-                                    CheckerboardBackground(modifier = Modifier.fillMaxSize())
-                                }
                                 DrawingCanvas(
                                     bitmap = editorState.bitmap,
                                     brushTool = viewModel.currentBrushTool,
-                                    isEnabled = !viewModel.isProcessing,
+                                    isEnabled = !viewModel.isProcessing && !viewModel.isBrushProcessing,
+                                    showCheckerboard = viewModel.currentBackground is BackgroundType.Transparent,
                                     onDrawingPath = { viewModel.addBrushStroke(it) },
                                     modifier = Modifier.fillMaxSize().animateContentSize()
                                 )
+                                
+                                // Show loading indicator when brush strokes are being applied
+                                if (viewModel.isBrushProcessing) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Color.Black.copy(alpha = 0.3f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(48.dp),
+                                            color = Color.White,
+                                            strokeWidth = 4.dp
+                                        )
+                                    }
+                                }
                             }
                         } else {
                             ZoomableBox(
