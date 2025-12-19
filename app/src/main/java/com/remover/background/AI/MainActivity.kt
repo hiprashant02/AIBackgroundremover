@@ -176,11 +176,13 @@ class MainActivity : ComponentActivity() {
     }
     
     // Apply locale without recreating activity (used on initial load)
+    @Suppress("DEPRECATION")
     private fun applyLocale(languageCode: String) {
-        val locale = Locale(languageCode)
+        val locale = Locale.forLanguageTag(languageCode)
         Locale.setDefault(locale)
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
+        @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
     }
     

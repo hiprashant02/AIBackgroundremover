@@ -1,27 +1,19 @@
 package com.remover.background.AI.utils
 
-import android.content.ContentValues
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
-import android.graphics.RenderEffect
 import android.graphics.Shader
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
-import androidx.annotation.RequiresApi
 import com.remover.background.AI.model.BackgroundType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
+/**
+ * Image processing utilities for composing final images.
+ */
 class ImageProcessor {
 
     companion object {
@@ -29,6 +21,9 @@ class ImageProcessor {
         private const val MAX_IMAGE_DIMENSION = 4096
     }
 
+    /**
+     * Resize bitmap if it exceeds maximum dimensions
+     */
     suspend fun resizeIfNeeded(bitmap: Bitmap): Bitmap = withContext(Dispatchers.Default) {
         val width = bitmap.width
         val height = bitmap.height
@@ -129,99 +124,6 @@ class ImageProcessor {
         return@withContext result
     }
 
-    /**
-     * Apply mask-based approach (alternative method)
-     */
-    suspend fun applyMaskToBitmap(
-        originalBitmap: Bitmap,
-        maskBitmap: Bitmap,
-        background: BackgroundType
-    ): Bitmap = withContext(Dispatchers.Default) {
-        val width = originalBitmap.width
-        val height = originalBitmap.height
-
-        // Create output bitmap
-        val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(outputBitmap)
-
-        // Draw background first
-        when (background) {
-            is BackgroundType.Transparent -> {
-                // Transparent background - do nothing
-            }
-            is BackgroundType.SolidColor -> {
-                canvas.drawColor(background.color.toArgb())
-            }
-            is BackgroundType.Gradient -> {
-                drawGradientBackground(canvas, width, height, background)
-            }
-            is BackgroundType.Blur -> {
-                drawBlurredBackground(canvas, originalBitmap, background.intensity)
-            }
-            is BackgroundType.Original -> {
-                canvas.drawBitmap(originalBitmap, 0f, 0f, null)
-                return@withContext outputBitmap
-            }
-            is BackgroundType.CustomImage -> {
-                val scaledBg = Bitmap.createScaledBitmap(background.bitmap, width, height, true)
-                canvas.drawBitmap(scaledBg, 0f, 0f, null)
-                if (scaledBg != background.bitmap) {
-                    scaledBg.recycle()
-                }
-            }
-        }
-
-        // Apply mask to extract subject
-        val subject = extractSubject(originalBitmap, maskBitmap)
-        canvas.drawBitmap(subject, 0f, 0f, null)
-
-        subject.recycle()
-
-        outputBitmap
-    }
-
-    private fun extractSubject(originalBitmap: Bitmap, maskBitmap: Bitmap): Bitmap {
-        val width = originalBitmap.width
-        val height = originalBitmap.height
-
-        val scaledMask = if (maskBitmap.width != width || maskBitmap.height != height) {
-            Bitmap.createScaledBitmap(maskBitmap, width, height, true)
-        } else {
-            maskBitmap
-        }
-
-        val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
-        val originalPixels = IntArray(width * height)
-        val maskPixels = IntArray(width * height)
-
-        originalBitmap.getPixels(originalPixels, 0, width, 0, 0, width, height)
-        scaledMask.getPixels(maskPixels, 0, width, 0, 0, width, height)
-
-        val resultPixels = IntArray(width * height)
-
-        for (i in originalPixels.indices) {
-            val alpha = Color.alpha(maskPixels[i])
-            val originalColor = originalPixels[i]
-
-            // Apply mask alpha to original pixel
-            resultPixels[i] = Color.argb(
-                alpha,
-                Color.red(originalColor),
-                Color.green(originalColor),
-                Color.blue(originalColor)
-            )
-        }
-
-        result.setPixels(resultPixels, 0, width, 0, 0, width, height)
-
-        if (scaledMask != maskBitmap) {
-            scaledMask.recycle()
-        }
-
-        return result
-    }
-
     private fun drawGradientBackground(
         canvas: Canvas,
         width: Int,
@@ -249,33 +151,6 @@ class ImageProcessor {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
     }
 
-    private fun drawCheckerboard(canvas: Canvas, width: Int, height: Int) {
-        val squareSize = 40 // 40 pixels for checkerboard squares
-        val lightColor = Color.rgb(42, 42, 42) // 0xFF2A2A2A
-        val darkColor = Color.rgb(26, 26, 26)  // 0xFF1A1A1A
-        
-        val paint = Paint()
-        
-        val numCols = (width / squareSize) + 1
-        val numRows = (height / squareSize) + 1
-        
-        for (row in 0..numRows) {
-            for (col in 0..numCols) {
-                val isLightSquare = (row + col) % 2 == 0
-                paint.color = if (isLightSquare) lightColor else darkColor
-                
-                canvas.drawRect(
-                    (col * squareSize).toFloat(),
-                    (row * squareSize).toFloat(),
-                    ((col + 1) * squareSize).toFloat(),
-                    ((row + 1) * squareSize).toFloat(),
-                    paint
-                )
-            }
-        }
-    }
-
-
     private fun drawBlurredBackground(canvas: Canvas, originalBitmap: Bitmap, intensity: Float) {
         // Create a blurred version of the original
         val blurred = fastBlur(originalBitmap, intensity.toInt().coerceIn(1, 25))
@@ -283,6 +158,9 @@ class ImageProcessor {
         blurred.recycle()
     }
 
+    /**
+     * Fast box blur implementation for background blur effect
+     */
     fun fastBlur(bitmap: Bitmap, radius: Int): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
@@ -349,132 +227,4 @@ class ImageProcessor {
             (this.blue * 255).toInt()
         )
     }
-
-    /**
-     * Save bitmap to file with best quality settings
-     * Uses PNG for transparency and JPEG for opaque images
-     */
-    suspend fun saveBitmapToFile(
-        bitmap: Bitmap,
-        outputFile: File,
-        hasTransparency: Boolean = false
-    ): Boolean = withContext(Dispatchers.IO) {
-        try {
-            outputFile.parentFile?.mkdirs()
-
-            outputFile.outputStream().use { out ->
-                if (hasTransparency) {
-                    // Use PNG for images with transparency (lossless)
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                } else {
-                    // Use JPEG with maximum quality for opaque images
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
-                }
-            }
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-
-    /**
-     * Save bitmap to MediaStore with high quality
-     * Automatically selects format based on background type
-     */
-    suspend fun saveBitmapHighQuality(
-        bitmap: Bitmap,
-        context: Context,
-        fileName: String,
-        backgroundType: BackgroundType
-    ): Uri? = withContext(Dispatchers.IO) {
-        try {
-            val hasTransparency = backgroundType is BackgroundType.Transparent
-
-            val format = if (hasTransparency) {
-                Bitmap.CompressFormat.PNG
-            } else {
-                Bitmap.CompressFormat.JPEG
-            }
-
-            val extension = if (hasTransparency) "png" else "jpg"
-            val mimeType = if (hasTransparency) "image/png" else "image/jpeg"
-
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "$fileName.$extension")
-                put(MediaStore.Images.Media.MIME_TYPE, mimeType)
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/AIBackgroundRemover")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-
-            val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-            uri?.let {
-                resolver.openOutputStream(it)?.use { out ->
-                    // Compress with maximum quality (100 for both PNG and JPEG)
-                    bitmap.compress(format, 100, out)
-                    out.flush()
-                }
-
-                // Mark as not pending anymore
-                contentValues.clear()
-                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                resolver.update(it, contentValues, null, null)
-
-                it
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    /**
-     * Save bitmap with automatic format detection and best quality
-     */
-    suspend fun saveImageWithBestQuality(
-        bitmap: Bitmap,
-        context: Context,
-        fileName: String = "bg_removed_${System.currentTimeMillis()}",
-        hasAlpha: Boolean = bitmap.hasAlpha()
-    ): Uri? = withContext(Dispatchers.IO) {
-        try {
-            val format = if (hasAlpha) {
-                Bitmap.CompressFormat.PNG
-            } else {
-                Bitmap.CompressFormat.JPEG
-            }
-
-            val extension = if (hasAlpha) "png" else "jpg"
-            val mimeType = if (hasAlpha) "image/png" else "image/jpeg"
-
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "$fileName.$extension")
-                put(MediaStore.Images.Media.MIME_TYPE, mimeType)
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/AIBackgroundRemover")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-
-            val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-            uri?.let {
-                resolver.openOutputStream(it)?.use { out ->
-                    bitmap.compress(format, 100, out)
-                    out.flush()
-                }
-
-                contentValues.clear()
-                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                resolver.update(it, contentValues, null, null)
-
-                it
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
 }
-

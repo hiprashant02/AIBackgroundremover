@@ -19,11 +19,3 @@ sealed class BackgroundType {
         val originalUri: Uri? = null
     ) : BackgroundType()
 }
-
-data class ProcessedImage(
-    val originalBitmap: android.graphics.Bitmap,
-    val processedBitmap: android.graphics.Bitmap,
-    val maskBitmap: android.graphics.Bitmap?,
-    val backgroundType: BackgroundType
-)
-

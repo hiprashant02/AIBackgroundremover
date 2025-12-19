@@ -93,14 +93,20 @@ class ManualEditingProcessor {
         val spacing = max(1f, brushSize * 0.1f)
         val steps = (distance / spacing).toInt()
 
-        for (i in 1..steps) {
-            val t = i.toFloat() / steps
-            drawBrushCircle(
-                canvas,
-                startX + (endX - startX) * t,
-                startY + (endY - startY) * t,
-                brushSize, brush.hardness, paint, targetAlpha
-            )
+        if (steps == 0) {
+            // Distance is very small - just draw at the endpoint
+            drawBrushCircle(canvas, endX, endY, brushSize, brush.hardness, paint, targetAlpha)
+        } else {
+            // Draw circles along the segment
+            for (i in 1..steps) {
+                val t = i.toFloat() / steps
+                drawBrushCircle(
+                    canvas,
+                    startX + (endX - startX) * t,
+                    startY + (endY - startY) * t,
+                    brushSize, brush.hardness, paint, targetAlpha
+                )
+            }
         }
     }
 

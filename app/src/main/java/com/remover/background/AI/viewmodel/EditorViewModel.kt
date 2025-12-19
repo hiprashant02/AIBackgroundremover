@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.io.InputStream
 
 // ... EditorState and UndoRedoState classes ...
 sealed class EditorState {
@@ -40,7 +39,7 @@ sealed class EditorState {
     data class Error(val message: String) : EditorState()
 }
 
-data class UndoRedoState(val foregroundBitmap: Bitmap, val maskBitmap: Bitmap)
+data class UndoRedoState(val foregroundBitmap: Bitmap, val maskBitmap: Bitmap?)
 
 class EditorViewModel : ViewModel() {
     // ... all existing properties ...
@@ -118,7 +117,7 @@ class EditorViewModel : ViewModel() {
     // ... Standard Initialization and Load Logic (Unchanged) ...
     fun initialize(context: Context) {
         if (processor == null) {
-            processor = BackgroundRemovalProcessor(context)
+            processor = BackgroundRemovalProcessor()
             fileManager = FileManager(context)
             reviewManager = InAppReviewManager(context)
             interstitialAdManager = InterstitialAdManager(context)
@@ -533,11 +532,11 @@ class EditorViewModel : ViewModel() {
     // --- Undo / Redo Logic ---
     private fun saveToUndoStack() {
         val currentFg = foregroundBitmap ?: return
-        val currentMask = editableMask ?: return
+        val currentMask = editableMask
         
         // We save a COPY of the bitmaps because they are mutable
         val fgCopy = currentFg.copy(currentFg.config ?: Bitmap.Config.ARGB_8888, true)
-        val maskCopy = currentMask.copy(currentMask.config ?: Bitmap.Config.ARGB_8888, true)
+        val maskCopy = currentMask?.copy(currentMask.config ?: Bitmap.Config.ARGB_8888, true)
         
         undoStack.add(UndoRedoState(fgCopy, maskCopy))
         redoStack.clear()
@@ -554,7 +553,7 @@ class EditorViewModel : ViewModel() {
         
         val currentState = UndoRedoState(
             foregroundBitmap?.copy(foregroundBitmap!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return,
-            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return
+            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true)
         )
         redoStack.add(currentState)
         
@@ -568,7 +567,7 @@ class EditorViewModel : ViewModel() {
         
         val currentState = UndoRedoState(
             foregroundBitmap?.copy(foregroundBitmap!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return,
-            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true) ?: return
+            editableMask?.copy(editableMask!!.config ?: Bitmap.Config.ARGB_8888, true)
         )
         undoStack.add(currentState)
         
@@ -636,9 +635,9 @@ class EditorViewModel : ViewModel() {
 
             isManualEditMode = true
             
-            // Clear stacks when entering new edit session to avoid state confusion
-            undoStack.clear()
-            redoStack.clear()
+            // Don't clear stacks! We want to preserve history.
+            // undoStack.clear()
+            // redoStack.clear()
             updateUndoRedoState()
         }
     }
@@ -686,7 +685,7 @@ class EditorViewModel : ViewModel() {
             isManualEditMode = false
             brushStrokes.clear()
             editableMask = null
-            hasPendingUndoSave = false
+            // hasPendingUndoSave = false // Removed
             strokeApplyJob?.cancel()
 
             // Clear saved state
@@ -699,7 +698,7 @@ class EditorViewModel : ViewModel() {
     // Debounce job for applying strokes
     private var strokeApplyJob: Job? = null
     private var lastStrokeTime = 0L
-    private var hasPendingUndoSave = false
+    // private var hasPendingUndoSave = false // Removed as it conflicts with proper undo flow
     
     fun addBrushStroke(path: DrawingPath) {
         viewModelScope.launch {
@@ -744,13 +743,20 @@ class EditorViewModel : ViewModel() {
             } else path
 
             // Save undo state ONCE before first stroke in a drawing session
-            if (!hasPendingUndoSave) {
-                saveToUndoStack()
-                hasPendingUndoSave = true
-            }
+            // Save undo state BEFORE adding the new stroke (so we can undo back to this state)
+            saveToUndoStack()
+
+            // Scale brush size from screen pixels to image pixels
+            // displayScaleFactor = displaySize / imageSize
+            // subjectScale = scale of the subject within the image
+            // So brush in image pixels = (brush in screen pixels / displayScaleFactor) / subjectScale
+            val scaledBrushTool = transformedPath.brushTool.copy(
+                size = (transformedPath.brushTool.size / displayScaleFactor) / subjectScale
+            )
+            val scaledPath = transformedPath.copy(brushTool = scaledBrushTool)
 
             // Add the stroke to pending list
-            brushStrokes.add(transformedPath)
+            brushStrokes.add(scaledPath)
             lastStrokeTime = System.currentTimeMillis()
             
             // Cancel previous debounce job

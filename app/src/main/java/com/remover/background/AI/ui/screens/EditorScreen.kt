@@ -20,6 +20,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material3.*
@@ -374,7 +377,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                             .background(Color.Black.copy(alpha = 0.4f))
                             .border(1.dp, Color.White.copy(0.1f), CircleShape)
                     ) {
-                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
                     }
                 },
                 actions = {
@@ -394,7 +397,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                                 enabled = viewModel.canUndo
                             ) {
                                 Icon(
-                                    Icons.Default.Undo,
+                                    Icons.AutoMirrored.Filled.Undo,
                                     "Undo",
                                     tint = if (viewModel.canUndo) Color.White else Color.White.copy(0.3f)
                                 )
@@ -411,7 +414,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                                 enabled = viewModel.canRedo
                             ) {
                                 Icon(
-                                    Icons.Default.Redo,
+                                    Icons.AutoMirrored.Filled.Redo,
                                     "Redo",
                                     tint = if (viewModel.canRedo) Color.White else Color.White.copy(0.3f)
                                 )
@@ -484,6 +487,7 @@ fun EditorScreen(viewModel: EditorViewModel, onBackClick: () -> Unit) {
                                     isEnabled = !viewModel.isProcessing && !viewModel.isBrushProcessing,
                                     showCheckerboard = viewModel.currentBackground is BackgroundType.Transparent,
                                     onDrawingPath = { viewModel.addBrushStroke(it) },
+                                    onDisplayScaleChanged = { viewModel.displayScaleFactor = it },
                                     modifier = Modifier.fillMaxSize().animateContentSize()
                                 )
                                 
@@ -788,7 +792,7 @@ fun BackgroundPickerSheet(
                             PickerView.GradientEndColor -> currentView = PickerView.CustomGradient
                         }
                     }) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
                     }
                     
                     Text(
@@ -877,7 +881,7 @@ fun BackgroundPickerSheet(
                     edgePadding = 16.dp,
                     indicator = { tabPositions ->
                         if (selectedTab < tabPositions.size) {
-                            TabRowDefaults.Indicator(
+                            TabRowDefaults.SecondaryIndicator(
                                 Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
                                 color = Primary,
                                 height = 3.dp

@@ -19,7 +19,7 @@ class PreferencesManager(private val context: Context) {
     }
     
     val languageFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[LANGUAGE_KEY] ?: "en" // Default to English
+        preferences[LANGUAGE_KEY] ?: "en"
     }
     
     val themeFlow: Flow<String> = context.dataStore.data.map { preferences ->

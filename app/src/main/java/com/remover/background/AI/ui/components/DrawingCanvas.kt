@@ -33,6 +33,7 @@ fun DrawingCanvas(
     isEnabled: Boolean = true,
     showCheckerboard: Boolean = false,
     onDrawingPath: (DrawingPath) -> Unit,
+    onDisplayScaleChanged: (Float) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
@@ -63,6 +64,15 @@ fun DrawingCanvas(
         }
     }
 
+    // Calculate and report display scale factor
+    LaunchedEffect(imageBounds, bitmap) {
+        if (imageBounds.width > 0 && bitmap.width > 0) {
+            val displayScale = imageBounds.width / bitmap.width.toFloat()
+            onDisplayScaleChanged(displayScale)
+        }
+    }
+
+
     Box(modifier = modifier.fillMaxSize().clipToBounds()) {
         Canvas(
             modifier = Modifier
@@ -76,12 +86,11 @@ fun DrawingCanvas(
 
                             // Handling Multitouch (Zoom/Pan)
                             if (event.changes.size >= 2) {
-                                // Save current stroke only if it has multiple points (prevents dots)
-                                if (isDrawing && currentPath.size > 1) {
-                                    onDrawingPath(DrawingPath(currentPath, brushTool))
-                                }
+                                // DISCARD current stroke when switching to zoom gesture
+                                // (don't save - the first finger of a zoom shouldn't draw)
                                 isDrawing = false
                                 currentPath = emptyList()
+                                cursorPosition = null
 
                                 val pressed = event.changes.filter { it.pressed }
                                 if (pressed.size >= 2) {
@@ -116,21 +125,25 @@ fun DrawingCanvas(
 
                                 if (imagePos != null) {
                                     if (change.pressed && !change.previousPressed) {
+                                        // Finger just pressed down - start new stroke
                                         isDrawing = true
                                         currentPath = listOf(imagePos)
                                         change.consume()
-                                    } else if (change.pressed && change.positionChanged() && isDrawing) {
-                                        // Optimization: Only add point if it's far enough from the last point
-                                        // This prevents the path from getting too large and causing lag/crashes
+                                    } else if (change.pressed && isDrawing) {
+                                        // Finger is moving while pressed
+                                        // Add point if it moved enough from the last point
                                         val lastPoint = currentPath.lastOrNull()
-                                        if (lastPoint != null) {
+                                        val shouldAddPoint = if (lastPoint != null) {
                                             val dx = imagePos.x - lastPoint.x
                                             val dy = imagePos.y - lastPoint.y
-                                            // Threshold of roughly 0.5-1% of screen size equivalent
-                                            if (dx * dx + dy * dy > 0.00005f) { 
-                                                currentPath = currentPath + imagePos
-                                            }
+                                            val distSq = dx * dx + dy * dy
+                                            // Very low threshold for responsive drawing
+                                            distSq > 0.00001f  // ~0.3% of image dimension
                                         } else {
+                                            true
+                                        }
+                                        
+                                        if (shouldAddPoint) {
                                             currentPath = currentPath + imagePos
                                         }
                                         change.consume()
@@ -162,7 +175,7 @@ fun DrawingCanvas(
                             } else {
                                 // No touches - complete any in-progress stroke
                                 if (isDrawing) {
-                                    if (currentPath.size > 1) {
+                                    if (currentPath.isNotEmpty()) {
                                         onDrawingPath(DrawingPath(currentPath, brushTool))
                                     }
                                     isDrawing = false
@@ -222,27 +235,56 @@ fun DrawingCanvas(
                     imageBounds.top + currentPath.first().y * imageBounds.height
                 )
                 currentPath.drop(1).forEach { p ->
+                    // Optimization: Skip points that are identical to previous point (handled by drop(1) logic implicitly but being safe)
                     path.lineTo(
                         imageBounds.left + p.x * imageBounds.width,
                         imageBounds.top + p.y * imageBounds.height
                     )
                 }
 
-                val scaleRatio = if (bitmap.width > 0) imageBounds.width / bitmap.width.toFloat() else 1f
-                val strokeWidth = brushTool.size * scaleRatio
+                // Don't scale by image ratio - brush size is in screen pixels (relative to the displayed image)
+                val strokeWidth = brushTool.size
                 val color = if (brushTool.mode == BrushMode.ERASE) Color.Red.copy(0.5f) else Color.Green.copy(0.5f)
 
-                drawPath(path, color, style = Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                // Use StrokeJoin.Round to prevent "spikes" (sharp triangles) on sharp turns
+                drawPath(
+                    path, 
+                    color, 
+                    style = Stroke(
+                        width = strokeWidth, 
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    )
+                )
             }
 
             // Draw Cursor
             if (cursorPosition != null && isEnabled && imageBounds != androidx.compose.ui.geometry.Rect.Zero) {
-                val scaleRatio = if (bitmap.width > 0) imageBounds.width / bitmap.width.toFloat() else 1f
-                val radius = (brushTool.size * scaleRatio) / 2
+                // Determine untransformed drawing coordinates so the cursor appears exactly under the finger
+                // visual_x = drawn_x * scale + offsetX
+                // drawn_x = (visual_x - offsetX) / scale
+                val drawX = (cursorPosition!!.x - offsetX) / scale
+                val drawY = (cursorPosition!!.y - offsetY) / scale
+                val drawPos = Offset(drawX, drawY)
+
+                // Don't scale radius by image ratio - brush size is in screen pixels
+                // But DO scale inverse by 'scale' so visual size remains constant relative to screen?
+                // NO, we want brush to look "attached" to the image zoom level.
+                // If we draw at 'radius', the graphicsLayer scales it by 'scale'.
+                // So visual_radius = radius * scale.
+                
+                // If we want visual size = brushTool.size (constant screen size):
+                // radius = (brushTool.size / 2) / scale
+                
+                // If we want visual size = brushTool.size * scale (zooms with image):
+                // radius = brushTool.size / 2
+                
+                // Current logic implies we want it to zoom (since effect scales with zoom).
+                val radius = brushTool.size / 2
                 val color = if (brushTool.mode == BrushMode.ERASE) Color.Red.copy(0.3f) else Color.Green.copy(0.3f)
 
-                drawCircle(color, radius, cursorPosition!!)
-                drawCircle(color.copy(alpha=0.8f), 2f, cursorPosition!!) // Center dot
+                drawCircle(color, radius, drawPos)
+                drawCircle(color.copy(alpha=0.8f), 2f / scale, drawPos) // Center dot (inverse scaled to remain sharp)
             }
         }
     }

@@ -21,8 +21,8 @@ android {
         applicationId = "com.remover.background.AI"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -89,9 +89,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
-    // MLKit Subject Segmentation
-    implementation(libs.mlkit.segmentation)
-
     // Image Loading
     implementation(libs.coil.compose)
 
@@ -131,7 +128,11 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
+
+
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // MLKit Subject Segmentation (Background Removal)
     implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
 
 }
