@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">Hapus Latar</string>
-    <string name="hero_title">Ciptakan\nKeajaiban.</string>
-    <string name="hero_subtitle">Ubah foto Anda menjadi mahakarya\ndengan pengeditan bertenaga AI.</string>
+    <string name="hero_title">Potongan\nInstan</string>
+    <string name="hero_subtitle">Hapus latar belakang secara instan.\n100% Offline dan Pribadi.</string>
     <string name="action_gallery_title">Galeri</string>
-    <string name="action_gallery_subtitle">Impor foto</string>
+    <string name="action_gallery_subtitle">Pilih dari perangkat</string>
     <string name="action_camera_title">Kamera</string>
-    <string name="action_camera_subtitle">Ambil foto</string>
+    <string name="action_camera_subtitle">Ambil foto baru</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Urungkan</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">Tentang aplikasi ini</string>
-    <string name="about_app_description">AI Background Remover menggunakan algoritma ML di perangkat untuk membuat potongan yang akurat. Semua pemrosesan terjadi secara lokal di ponsel Anda, jadi tidak diperlukan internet dan tidak ada yang dikirim ke server mana pun. Semuanya dilakukan sepenuhnya offline, menjaga foto Anda 100% pribadi. Sempurna untuk potret, foto produk, dan pengeditan kreatif cepat.</string>
+    <string name="about_app_description">• Menggunakan ML di perangkat untuk deteksi latar belakang yang akurat.\n• Pemrosesan 100% Offline - tidak perlu internet.\n• Foto Anda tidak pernah meninggalkan perangkat Anda.\n• Privasi Anda terjaga.</string>
     <string name="app_version">Versi 1.0.0</string>
     
     <!-- Contact Section -->

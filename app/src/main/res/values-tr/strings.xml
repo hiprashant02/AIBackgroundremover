@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">Arka Plan Kaldır</string>
-    <string name="hero_title">Sihir\nYarat.</string>
-    <string name="hero_subtitle">Yapay zeka destekli düzenleme ile\nfotoğraflarınızı başyapıtlara dönüştürün.</string>
+    <string name="hero_title">Anında\nKesim</string>
+    <string name="hero_subtitle">Arka planları anında kaldırın.\n%100 Çevrimdışı ve Gizli.</string>
     <string name="action_gallery_title">Galeri</string>
-    <string name="action_gallery_subtitle">Fotoğraf içe aktar</string>
+    <string name="action_gallery_subtitle">Cihazdan seç</string>
     <string name="action_camera_title">Kamera</string>
-    <string name="action_camera_subtitle">Fotoğraf çek</string>
+    <string name="action_camera_subtitle">Yeni bir fotoğraf çek</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Geri Al</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">Bu uygulama hakkında</string>
-    <string name="about_app_description">AI Background Remover, doğru kesimler oluşturmak için cihaz üzerinde ML algoritması kullanır. Tüm işlemler telefonunuzda yerel olarak gerçekleşir, bu nedenle internet gerekmez ve hiçbir şey sunucuya gönderilmez. Her şey tamamen çevrimdışı yapılır, fotoğraflarınızı %100 gizli tutar. Portreler, ürün fotoğrafları ve hızlı yaratıcı düzenlemeler için mükemmel.</string>
+    <string name="about_app_description">• Doğru arka plan tespiti için cihaz içi ML kullanır.\n• %100 Çevrimdışı işleme - internet gerekmez.\n• Fotoğraflarınız cihazınızdan asla çıkmaz.\n• Gizliliğiniz korunur.</string>
     <string name="app_version">Sürüm 1.0.0</string>
     
     <!-- Contact Section -->

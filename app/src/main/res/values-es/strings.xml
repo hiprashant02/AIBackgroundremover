@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">Littichokha Studio</string>
-    <string name="hero_title">Crea\nMagia.</string>
-    <string name="hero_subtitle">Convierte tus fotos en obras maestras\ncon edición impulsada por IA.</string>
+    <string name="hero_title">Recortes\nInstantáneos</string>
+    <string name="hero_subtitle">Elimina fondos al instante.\n100% Offline y Privado.</string>
     <string name="action_gallery_title">Galería</string>
-    <string name="action_gallery_subtitle">Importar foto</string>
+    <string name="action_gallery_subtitle">Seleccionar del dispositivo</string>
     <string name="action_camera_title">Cámara</string>
-    <string name="action_camera_subtitle">Tomar foto</string>
+    <string name="action_camera_subtitle">Tomar una nueva foto</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Deshacer</string>
@@ -123,13 +123,13 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">Acerca de esta app</string>
-    <string name="about_app_description">AI Background Remover utiliza un algoritmo ML en el dispositivo para crear recortes precisos. Todo el procesamiento ocurre localmente en tu teléfono, por lo que no se requiere internet y nada se envía a ningún servidor. Todo se hace completamente sin conexión, manteniendo tus fotos 100% privadas. Perfecto para retratos, fotos de productos y ediciones creativas rápidas.</string>
+    <string name="about_app_description">• Utiliza ML en el dispositivo para una detección precisa del fondo.\n• Procesamiento 100% sin conexión: no se necesita internet.\n• Sus fotos nunca salen de su dispositivo.\n• Se mantiene su privacidad.</string>
     <string name="app_version">Versión 1.0.0</string>
     
     <!-- Contact Section -->
     <string name="contact_title">Contacto</string>
     <string name="email_us">Enviar comentarios</string>
-    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="developer_email">letsdevelop7@gmail.com</string>
     <string name="privacy_policy">Política de Privacidad</string>
 </resources>
 

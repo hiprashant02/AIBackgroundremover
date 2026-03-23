@@ -21,8 +21,8 @@ android {
         applicationId = "com.remover.background.AI"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -39,6 +39,11 @@ android {
         
         // AdMob App ID for manifest
         manifestPlaceholders["ADMOB_APP_ID"] = localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
+    }
+    
+    // Don't compress tflite model files
+    androidResources {
+        noCompress += listOf("tflite")
     }
 
     buildTypes {

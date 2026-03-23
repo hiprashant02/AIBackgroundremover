@@ -10,7 +10,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Background removal processor using ML Kit Subject Segmentation.
- * Provides fast, high-quality background removal.
+ * Uses foregroundBitmap directly from MLKit for best results.
+ * 
+ * Recommended: Image should be at least 512x512 pixels for best quality.
  */
 class BackgroundRemovalProcessor {
 
@@ -21,8 +23,8 @@ class BackgroundRemovalProcessor {
     private val segmenter = SubjectSegmentation.getClient(options)
 
     /**
-     * Removes background using ML Kit's foreground bitmap
-     * This is the primary method - fast and accurate.
+     * Removes background using ML Kit Subject Segmentation.
+     * Returns the foreground bitmap with transparent background.
      */
     suspend fun removeBackground(bitmap: Bitmap): Result<Bitmap> = withContext(Dispatchers.Default) {
         return@withContext try {

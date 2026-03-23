@@ -66,51 +66,7 @@ fun AboutDeveloperScreen(
                 .padding(padding)
                 .verticalScroll(scrollState)
         ) {
-            Spacer(Modifier.height(8.dp))
-            
-            // ═══════════════════════════════════════════════════════
-            // LITTICHOKHA STUDIO HEADER
-            // ═══════════════════════════════════════════════════════
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Studio Logo - "L"
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .clip(RoundedCornerShape(22.dp))
-                        .background(Primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "L",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-                
-                Spacer(Modifier.height(20.dp))
-                
-                Text(
-                    text = stringResource(R.string.studio_name),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                
-                Spacer(Modifier.height(6.dp))
-                
-                Text(
-                    text = stringResource(R.string.studio_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Spacer(Modifier.height(16.dp))
             
             // ═══════════════════════════════════════════════════════
             // ABOUT THIS APP SECTION
@@ -118,40 +74,59 @@ fun AboutDeveloperScreen(
             SectionHeader(title = stringResource(R.string.about_app_title))
             
             GroupedCard {
+                // App Icon and Title
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // App Icon
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Using mipmap as default app icon
+                        Icon(
+                             painter = androidx.compose.ui.res.painterResource(id = R.drawable.app_icon),
+                             contentDescription = null,
+                             modifier = Modifier.fillMaxSize(),
+                             tint = Color.Unspecified
+                        )
+                    }
+                    
+                    Spacer(Modifier.width(16.dp))
+                    
+                    Column {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Version 3.0",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
                 Text(
                     text = stringResource(R.string.about_app_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 22.sp
-                )
-            }
-            
-            Spacer(Modifier.height(28.dp))
-            
-            // ═══════════════════════════════════════════════════════
-            // DEVELOPER SECTION
-            // ═══════════════════════════════════════════════════════
-            SectionHeader(title = stringResource(R.string.about_us_title))
-            
-            GroupedCard {
-                Text(
-                    text = stringResource(R.string.about_us_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 22.sp
-                )
-                
-                Spacer(Modifier.height(12.dp))
-                
-                Text(
-                    text = stringResource(R.string.developed_by),
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    color = Primary
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 18.sp
                 )
             }
             
             Spacer(Modifier.height(28.dp))
+            
+
             
             // ═══════════════════════════════════════════════════════
             // CONTACT SECTION

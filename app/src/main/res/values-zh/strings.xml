@@ -1,14 +1,14 @@
 <resources>
-    <string name="app_name">AI Background remover</string>
+    <string name="app_name">AI Background Eraser</string>
     
     <!-- Home Screen -->
     <string name="studio_title">移除背景</string>
-    <string name="hero_title">创造\n魔法。</string>
-    <string name="hero_subtitle">使用AI驱动的编辑\n将您的照片变成杰作。</string>
+    <string name="hero_title">即时\n抠图</string>
+    <string name="hero_subtitle">立即移除背景。\n100% 离线且私密。</string>
     <string name="action_gallery_title">图库</string>
-    <string name="action_gallery_subtitle">导入照片</string>
+    <string name="action_gallery_subtitle">从设备选择</string>
     <string name="action_camera_title">相机</string>
-    <string name="action_camera_subtitle">拍照</string>
+    <string name="action_camera_subtitle">拍摄新照片</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">撤销</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">关于此应用</string>
-    <string name="about_app_description">AI Background Remover使用设备上的ML算法创建精确的抠图。所有处理都在您的手机上本地进行，因此不需要互联网，也不会向任何服务器发送任何内容。一切都完全离线完成，使您的照片保持100%私密。非常适合人像、产品照片和快速创意编辑。</string>
+    <string name="about_app_description">• 使用设备上的ML进行精确的背景检测。\n• 100%离线处理 - 无需互联网。\n• 您的照片永远不会离开您的设备。\n• 您的隐私得到维护。</string>
     <string name="app_version">版本 1.0.0</string>
     
     <!-- Contact Section -->

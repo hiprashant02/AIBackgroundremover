@@ -1,14 +1,14 @@
 <resources>
-    <string name="app_name">AI Background remover</string>
+    <string name="app_name">AI Background Eraser</string>
     
     <!-- Home Screen -->
     <string name="studio_title">बैकग्राउंड हटाएं</string>
-    <string name="hero_title">जादू\nबनाएं।</string>
-    <string name="hero_subtitle">AI-संचालित संपादन के साथ\nअपनी तस्वीरों को उत्कृष्ट कृतियों में बदलें।</string>
+    <string name="hero_title">तुरंत\nकटआउट</string>
+    <string name="hero_subtitle">तुरंत बैकग्राउंड हटाएं।\n100% ऑफ़लाइन और निजी।</string>
     <string name="action_gallery_title">गैलरी</string>
-    <string name="action_gallery_subtitle">फोटो आयात करें</string>
+    <string name="action_gallery_subtitle">डिवाइस से चुनें</string>
     <string name="action_camera_title">कैमरा</string>
-    <string name="action_camera_subtitle">फोटो लें</string>
+    <string name="action_camera_subtitle">नई फोटो लें</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">पूर्ववत करें</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">इस ऐप के बारे में</string>
-    <string name="about_app_description">AI Background Remover सटीक कटआउट बनाने के लिए ऑन-डिवाइस ML एल्गोरिथम का उपयोग करता है। सभी प्रोसेसिंग आपके फोन पर स्थानीय रूप से होती है, इसलिए इंटरनेट की आवश्यकता नहीं है और कुछ भी किसी सर्वर पर नहीं भेजा जाता। सब कुछ पूरी तरह से ऑफलाइन किया जाता है, जिससे आपकी तस्वीरें 100% निजी रहती हैं। पोर्ट्रेट, प्रोडक्ट फोटो और त्वरित क्रिएटिव एडिट के लिए बिल्कुल सही।</string>
+    <string name="about_app_description">• सटीक बैकग्राउंड डिटेक्शन के लिए ऑन-डिवाइस ML का उपयोग करता है।\n• 100% ऑफ़लाइन प्रोसेसिंग - इंटरनेट की कोई आवश्यकता नहीं।\n• आपकी तस्वीरें कभी भी आपके डिवाइस से बाहर नहीं जाती हैं।\n• आपकी गोपनीयता बनी रहती है।</string>
     <string name="app_version">संस्करण 1.0.0</string>
     
     <!-- Contact Section -->

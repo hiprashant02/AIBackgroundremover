@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">Remover Fundo</string>
-    <string name="hero_title">Crie\nMagia.</string>
-    <string name="hero_subtitle">Transforme suas fotos em obras-primas\ncom edição com IA.</string>
+    <string name="hero_title">Recortes\nInstantâneos</string>
+    <string name="hero_subtitle">Remova fundos instantaneamente.\n100% Offline e Privado.</string>
     <string name="action_gallery_title">Galeria</string>
-    <string name="action_gallery_subtitle">Importar foto</string>
+    <string name="action_gallery_subtitle">Selecionar do dispositivo</string>
     <string name="action_camera_title">Câmera</string>
-    <string name="action_camera_subtitle">Tirar foto</string>
+    <string name="action_camera_subtitle">Tirar uma nova foto</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Desfazer</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">Sobre este app</string>
-    <string name="about_app_description">AI Background Remover usa um algoritmo ML no dispositivo para criar recortes precisos. Todo o processamento acontece localmente no seu telefone, então não é necessário internet e nada é enviado a nenhum servidor. Tudo é feito completamente offline, mantendo suas fotos 100% privadas. Perfeito para retratos, fotos de produtos e edições criativas rápidas.</string>
+    <string name="about_app_description">• Usa ML no dispositivo para detecção precisa de fundo.\n• Processamento 100% offline - sem necessidade de internet.\n• Suas fotos nunca saem do seu dispositivo.\n• Sua privacidade é mantida.</string>
     <string name="app_version">Versão 1.0.0</string>
     
     <!-- Contact Section -->

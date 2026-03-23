@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">إزالة الخلفية</string>
-    <string name="hero_title">اصنع\nالسحر.</string>
-    <string name="hero_subtitle">حوّل صورك إلى روائع\nبالتحرير بالذكاء الاصطناعي.</string>
+    <string name="hero_title">قص\nفوري</string>
+    <string name="hero_subtitle">إزالة الخلفيات على الفور.\n100% غير متصل وخاص.</string>
     <string name="action_gallery_title">المعرض</string>
-    <string name="action_gallery_subtitle">استيراد صورة</string>
+    <string name="action_gallery_subtitle">اختر من الجهاز</string>
     <string name="action_camera_title">الكاميرا</string>
-    <string name="action_camera_subtitle">التقاط صورة</string>
+    <string name="action_camera_subtitle">التقاط صورة جديدة</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">تراجع</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">حول هذا التطبيق</string>
-    <string name="about_app_description">يستخدم AI Background Remover خوارزمية تعلم آلي على الجهاز لإنشاء قصات دقيقة. تتم جميع المعالجة محلياً على هاتفك، لذلك لا حاجة للإنترنت ولا يتم إرسال أي شيء إلى أي خادم. يتم كل شيء دون اتصال تماماً، مما يحافظ على خصوصية صورك 100%. مثالي للصور الشخصية وصور المنتجات والتحريرات الإبداعية السريعة.</string>
+    <string name="about_app_description">• يستخدم التعلم الآلي على الجهاز للكشف الدقيق عن الخلفية.\n• معالجة غير متصلة بالإنترنت بنسبة 100% - لا حاجة للإنترنت.\n• صورك لا تترك جهازك أبداً.\n• خصوصيتك مصونة.</string>
     <string name="app_version">الإصدار 1.0.0</string>
     
     <!-- Contact Section -->

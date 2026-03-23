@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">背景を削除</string>
-    <string name="hero_title">マジックを\n作成。</string>
-    <string name="hero_subtitle">AI搭載の編集で\n写真を傑作に変えましょう。</string>
+    <string name="hero_title">瞬時に\n切り抜き</string>
+    <string name="hero_subtitle">背景を瞬時に削除。\n100% オフラインでプライベート。</string>
     <string name="action_gallery_title">ギャラリー</string>
-    <string name="action_gallery_subtitle">写真をインポート</string>
+    <string name="action_gallery_subtitle">デバイスから選択</string>
     <string name="action_camera_title">カメラ</string>
-    <string name="action_camera_subtitle">写真を撮る</string>
+    <string name="action_camera_subtitle">新しい写真を撮る</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">元に戻す</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">このアプリについて</string>
-    <string name="about_app_description">AI Background Removerは、デバイス上のMLアルゴリズムを使用して正確な切り抜きを作成します。すべての処理はお使いの電話でローカルに行われるため、インターネットは不要で、サーバーには何も送信されません。すべてが完全にオフラインで行われ、写真を100%プライベートに保ちます。ポートレート、製品写真、クイック編集に最適です。</string>
+    <string name="about_app_description">• 正確な背景検出のためにオンデバイスMLを使用します。\n• 100%オフライン処理 - インターネットは不要です。\n• 写真がデバイスから出ることはありません。\n• プライバシーは守られます。</string>
     <string name="app_version">バージョン 1.0.0</string>
     
     <!-- Contact Section -->

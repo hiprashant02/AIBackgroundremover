@@ -78,7 +78,10 @@ class EditorViewModel : ViewModel() {
         private set
     var canRedo by mutableStateOf(false)
         private set
+    
+    // Subject Segmentation processor (only segmentation method)
     private var processor: BackgroundRemovalProcessor? = null
+    
     private val imageProcessor = ImageProcessor()
     private var fileManager: FileManager? = null
     private var reviewManager: InAppReviewManager? = null
@@ -241,8 +244,9 @@ class EditorViewModel : ViewModel() {
 
     private suspend fun processBackground(bitmap: Bitmap) {
         try {
-            // Use fast MLKit by default for instant results
+            // Use Subject Segmentation for background removal
             val result = processor?.removeBackground(bitmap)
+            
             if (result?.isSuccess == true) {
                 val fg = result.getOrNull()
                 if (fg != null) {

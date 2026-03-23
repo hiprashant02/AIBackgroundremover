@@ -1,14 +1,14 @@
 <resources>
-    <string name="app_name">AI Background remover</string>
+    <string name="app_name">AI Background Eraser</string>
     
     <!-- Home Screen -->
     <string name="studio_title">Hintergrund Entf.</string>
-    <string name="hero_title">Erstelle\nMagie.</string>
-    <string name="hero_subtitle">Verwandle deine Fotos in Meisterwerke\nmit KI-gestützter Bearbeitung.</string>
+    <string name="hero_title">Sofortige\nAusschnitte</string>
+    <string name="hero_subtitle">Hintergründe sofort entfernen.\n100% Offline und Privat.</string>
     <string name="action_gallery_title">Galerie</string>
-    <string name="action_gallery_subtitle">Foto importieren</string>
+    <string name="action_gallery_subtitle">Vom Gerät auswählen</string>
     <string name="action_camera_title">Kamera</string>
-    <string name="action_camera_subtitle">Foto aufnehmen</string>
+    <string name="action_camera_subtitle">Neues Foto aufnehmen</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Rückgängig</string>
@@ -123,7 +123,7 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">Über diese App</string>
-    <string name="about_app_description">AI Background Remover verwendet einen geräteeigenen ML-Algorithmus, um präzise Ausschnitte zu erstellen. Die gesamte Verarbeitung erfolgt lokal auf Ihrem Telefon, sodass kein Internet erforderlich ist und nichts an einen Server gesendet wird. Alles wird vollständig offline erledigt, wodurch Ihre Fotos 100% privat bleiben. Perfekt für Porträts, Produktfotos und schnelle kreative Bearbeitungen.</string>
+    <string name="about_app_description">• Verwendet On-Device-ML für präzise Hintergrunderkennung.\n• 100% Offline-Verarbeitung - kein Internet erforderlich.\n• Ihre Fotos verlassen niemals Ihr Gerät.\n• Ihre Privatsphäre bleibt gewahrt.</string>
     <string name="app_version">Version 1.0.0</string>
     
     <!-- Contact Section -->

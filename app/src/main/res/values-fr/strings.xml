@@ -3,12 +3,12 @@
     
     <!-- Home Screen -->
     <string name="studio_title">Littichokha Studio</string>
-    <string name="hero_title">Créez\nla Magie.</string>
-    <string name="hero_subtitle">Transformez vos photos en chefs-d\'œuvre\navec l\'édition alimentée par IA.</string>
+    <string name="hero_title">Détourage\nInstantané</string>
+    <string name="hero_subtitle">Supprimez les fonds instantanément.\n100% Hors ligne et Privé.</string>
     <string name="action_gallery_title">Galerie</string>
-    <string name="action_gallery_subtitle">Importer une photo</string>
+    <string name="action_gallery_subtitle">Sélectionner depuis l\'appareil</string>
     <string name="action_camera_title">Caméra</string>
-    <string name="action_camera_subtitle">Prendre une photo</string>
+    <string name="action_camera_subtitle">Prendre une nouvelle photo</string>
     
     <!-- Editor Screen - Top Menu -->
     <string name="menu_undo">Annuler</string>
@@ -123,13 +123,13 @@
     
     <!-- About This App Section -->
     <string name="about_app_title">À propos de cette app</string>
-    <string name="about_app_description">AI Background Remover utilise un algorithme ML sur l\'appareil pour créer des découpes précises. Tout le traitement se fait localement sur votre téléphone, donc aucune connexion internet n\'est requise et rien n\'est envoyé à aucun serveur. Tout est fait entièrement hors ligne, gardant vos photos 100% privées. Parfait pour les portraits, photos de produits et éditions créatives rapides.</string>
+    <string name="about_app_description">• Utilise le ML sur l\'appareil pour une détection précise de l\'arrière-plan.\n• Traitement 100 % hors ligne - aucune connexion Internet requise.\n• Vos photos ne quittent jamais votre appareil.\n• Votre confidentialité est préservée.</string>
     <string name="app_version">Version 1.0.0</string>
     
     <!-- Contact Section -->
     <string name="contact_title">Contact</string>
     <string name="email_us">Envoyer des commentaires</string>
-    <string name="developer_email">letsdevelop07@gmail.com</string>
+    <string name="developer_email">letsdevelop7@gmail.com</string>
     <string name="privacy_policy">Politique de Confidentialité</string>
 </resources>
 

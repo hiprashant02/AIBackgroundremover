@@ -125,6 +125,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onAboutClick = {
                                         navController.navigate("about")
+                                    },
+                                    onPrivacyClick = {
+                                        navController.navigate("privacy")
                                     }
                                 )
                             }
