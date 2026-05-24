@@ -80,6 +80,12 @@ android {
             enableSplit = false
         }
     }
+    sourceSets {
+        getByName("debug") {
+            assets.srcDirs("../birefnet-model/src/main/assets")
+        }
+    }
+    assetPacks.addAll(listOf(":birefnet-model"))
 }
 
 dependencies {
@@ -140,4 +146,10 @@ dependencies {
     // MLKit Subject Segmentation (Background Removal)
     implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
 
+    // ONNX Runtime Mobile
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.0")
+
+    // Play Core for Play Asset Delivery (PAD)
+    implementation("com.google.android.play:asset-delivery:2.3.0")
+    implementation("com.google.android.play:asset-delivery-ktx:2.3.0")
 }

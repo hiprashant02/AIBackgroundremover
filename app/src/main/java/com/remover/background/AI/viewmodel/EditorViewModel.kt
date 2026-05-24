@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.remover.background.AI.ml.BackgroundRemovalProcessor
+import com.remover.background.AI.ml.OnnxBackgroundRemovalProcessor
 
 import com.remover.background.AI.model.BackgroundType
 import com.remover.background.AI.model.BrushMode
@@ -79,8 +80,10 @@ class EditorViewModel : ViewModel() {
     var canRedo by mutableStateOf(false)
         private set
     
-    // Subject Segmentation processor (only segmentation method)
+    // Subject Segmentation processor (ML Kit fallback)
     private var processor: BackgroundRemovalProcessor? = null
+    // High-quality ONNX background removal processor
+    private var onnxProcessor: OnnxBackgroundRemovalProcessor? = null
     
     private val imageProcessor = ImageProcessor()
     private var fileManager: FileManager? = null
@@ -121,6 +124,7 @@ class EditorViewModel : ViewModel() {
     fun initialize(context: Context) {
         if (processor == null) {
             processor = BackgroundRemovalProcessor()
+            onnxProcessor = OnnxBackgroundRemovalProcessor(context)
             fileManager = FileManager(context)
             reviewManager = InAppReviewManager(context)
             interstitialAdManager = InterstitialAdManager(context)
@@ -244,8 +248,13 @@ class EditorViewModel : ViewModel() {
 
     private suspend fun processBackground(bitmap: Bitmap) {
         try {
-            // Use Subject Segmentation for background removal
-            val result = processor?.removeBackground(bitmap)
+            // Try using high-quality ONNX background removal first
+            var result = onnxProcessor?.removeBackground(bitmap)
+            
+            // Fall back to ML Kit if ONNX is not initialized or fails
+            if (result == null || result.isFailure) {
+                result = processor?.removeBackground(bitmap)
+            }
             
             if (result?.isSuccess == true) {
                 val fg = result.getOrNull()
@@ -903,5 +912,10 @@ class EditorViewModel : ViewModel() {
             resetStatesSync()
             editorState = EditorState.Idle
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        onnxProcessor?.close()
     }
 }

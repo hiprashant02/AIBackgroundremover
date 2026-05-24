@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AI Background remover"
 include(":app")
- 
+include(":birefnet-model")
